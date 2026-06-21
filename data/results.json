@@ -1,0 +1,350 @@
+{
+  "updatedAt": "2026-06-21T20:33:17.555Z",
+  "source": "football-data.org/WC",
+  "results": {
+    "1": {
+      "outcome": "1",
+      "home": 2,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "2": {
+      "outcome": "1",
+      "home": 2,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "3": {
+      "outcome": "X",
+      "home": 1,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "4": {
+      "outcome": "1",
+      "home": 4,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "5": {
+      "outcome": "X",
+      "home": 1,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "6": {
+      "outcome": "X",
+      "home": 1,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "7": {
+      "outcome": "2",
+      "home": 0,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "8": {
+      "outcome": "1",
+      "home": 2,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "9": {
+      "outcome": "1",
+      "home": 7,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "10": {
+      "outcome": "X",
+      "home": 2,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "11": {
+      "outcome": "1",
+      "home": 1,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "12": {
+      "outcome": "1",
+      "home": 5,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "13": {
+      "outcome": "X",
+      "home": 0,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "14": {
+      "outcome": "X",
+      "home": 1,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "15": {
+      "outcome": "X",
+      "home": 1,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "16": {
+      "outcome": "X",
+      "home": 2,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "17": {
+      "outcome": "1",
+      "home": 3,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "18": {
+      "outcome": "2",
+      "home": 1,
+      "away": 4,
+      "status": "FINISHED"
+    },
+    "19": {
+      "outcome": "1",
+      "home": 3,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "20": {
+      "outcome": "1",
+      "home": 3,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "21": {
+      "outcome": "X",
+      "home": 1,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "22": {
+      "outcome": "1",
+      "home": 4,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "23": {
+      "outcome": "1",
+      "home": 1,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "24": {
+      "outcome": "2",
+      "home": 1,
+      "away": 3,
+      "status": "FINISHED"
+    },
+    "25": {
+      "outcome": "X",
+      "home": 1,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "26": {
+      "outcome": "1",
+      "home": 4,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "27": {
+      "outcome": "1",
+      "home": 6,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "28": {
+      "outcome": "1",
+      "home": 1,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "29": {
+      "outcome": "1",
+      "home": 2,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "30": {
+      "outcome": "2",
+      "home": 0,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "31": {
+      "outcome": "1",
+      "home": 3,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "32": {
+      "outcome": "2",
+      "home": 0,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "33": {
+      "outcome": "1",
+      "home": 5,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "34": {
+      "outcome": "1",
+      "home": 2,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "35": {
+      "outcome": "X",
+      "home": 0,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "36": {
+      "outcome": "2",
+      "home": 0,
+      "away": 4,
+      "status": "FINISHED"
+    },
+    "37": {
+      "outcome": "1",
+      "home": 5,
+      "away": 0,
+      "status": "FINISHED"
+    }
+  },
+  "scorers": [
+    {
+      "name": "Deniz Undav",
+      "team": "Germany",
+      "goals": 3,
+      "assists": 2
+    },
+    {
+      "name": "Lionel Messi",
+      "team": "Argentina",
+      "goals": 3,
+      "assists": 0
+    },
+    {
+      "name": "Jonathan David",
+      "team": "Canada",
+      "goals": 3,
+      "assists": 0
+    },
+    {
+      "name": "Cyle Larin",
+      "team": "Canada",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Folarin Balogun",
+      "team": "United States",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Ismael Saibari",
+      "team": "Morocco",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Vinicius Junior",
+      "team": "Brazil",
+      "goals": 2,
+      "assists": 2
+    },
+    {
+      "name": "Kai Havertz",
+      "team": "Germany",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Daichi Kamada",
+      "team": "Japan",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Yasin Ayari",
+      "team": "Sweden",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Elijah Just",
+      "team": "New Zealand",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Kylian Mbappé",
+      "team": "France",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Erling Haaland",
+      "team": "Norway",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Harry Kane",
+      "team": "England",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Johan Manzambi",
+      "team": "Switzerland",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Matheus Cunha",
+      "team": "Brazil",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Brian Brobbey",
+      "team": "Netherlands",
+      "goals": 2,
+      "assists": 0
+    },
+    {
+      "name": "Cody Gakpo",
+      "team": "Netherlands",
+      "goals": 2,
+      "assists": 2
+    },
+    {
+      "name": "Ayase Ueda",
+      "team": "Japan",
+      "goals": 2,
+      "assists": 1
+    },
+    {
+      "name": "Mikel Oyarzabal",
+      "team": "Spain",
+      "goals": 2,
+      "assists": 1
+    }
+  ]
+}

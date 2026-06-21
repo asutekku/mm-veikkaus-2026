@@ -1,0 +1,39 @@
+name: Update results
+
+# Fetches the latest World Cup results and commits data/results.json.
+# GitHub Pages (serving from the main branch) then redeploys automatically.
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'   # every 3 hours
+  workflow_dispatch:          # manual "Run workflow" button
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch latest results
+        env:
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+        run: node scripts/update-results.js
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "results-bot"
+          git config user.email "actions@github.com"
+          if ! git diff --quiet -- data/results.json; then
+            git add data/results.json
+            git commit -m "Update results ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+            git push
+          else
+            echo "No result changes."
+          fi

@@ -1,0 +1,16 @@
+{
+  "name": "mm-veikkaus-2026",
+  "version": "1.0.0",
+  "description": "Family World Cup 2026 prediction game — auto-scoring website",
+  "type": "commonjs",
+  "scripts": {
+    "build": "node scripts/build-predictions.js",
+    "seed": "node scripts/seed-results.js",
+    "update": "node scripts/update-results.js",
+    "serve": "python3 -m http.server 8765"
+  },
+  "devDependencies": {
+    "xlsx": "^0.18.5",
+    "puppeteer": "^25.1.0"
+  }
+}

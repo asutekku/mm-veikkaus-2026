@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MM-veikkaus '26 · perheliiga</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>" />
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrap mast-inner">
+      <div class="mast-title">
+        <span class="kicker">PERHELIIGA · FIFA WORLD CUP 2026</span>
+        <h1>MM-VEIKKAUS <em>'26</em></h1>
+      </div>
+      <div class="mast-meta">
+        <span class="live-dot"></span>
+        <span id="updated">—</span>
+      </div>
+    </div>
+    <div class="ribbon-wrap"><div class="wrap"><div id="ribbon" class="ribbon"></div></div></div>
+  </header>
+
+  <nav class="tabs wrap">
+    <button class="tab is-active" data-view="dash">ETUSIVU</button>
+    <button class="tab" data-view="matches">OTTELUT</button>
+    <button class="tab" data-view="bonus">BONUKSET</button>
+  </nav>
+
+  <main class="wrap">
+    <section id="view-dash" class="view"></section>
+    <section id="view-matches" class="view" hidden></section>
+    <section id="view-bonus" class="view" hidden></section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p><b>Pisteytys</b> · 1 piste / oikein veikattu lopputulos (1 / X / 2). Vain päättyneet ottelut lasketaan.</p>
+    <p class="muted">Tulokset & maalintekijät: football-data.org · Voitto-% perustuu perheen konsensusmalliin (Monte Carlo, 8000 simulaatiota).</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
