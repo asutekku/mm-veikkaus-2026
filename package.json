@@ -10,7 +10,6 @@
     "serve": "python3 -m http.server 8765"
   },
   "devDependencies": {
-    "xlsx": "^0.18.5",
-    "puppeteer": "^25.1.0"
+    "xlsx": "^0.18.5"
   }
 }
