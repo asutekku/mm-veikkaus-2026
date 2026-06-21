@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-21T20:53:11.573Z",
+  "updatedAt": "2026-06-21T22:15:23.802Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -221,6 +221,12 @@
     "37": {
       "outcome": "1",
       "home": 4,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "38": {
+      "outcome": "X",
+      "home": 0,
       "away": 0,
       "status": "FINISHED"
     }
