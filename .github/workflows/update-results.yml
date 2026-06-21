@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: update-results
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -30,10 +34,15 @@ jobs:
         run: |
           git config user.name  "results-bot"
           git config user.email "actions@github.com"
-          if ! git diff --quiet -- data/results.json; then
-            git add data/results.json
-            git commit -m "Update results ($(date -u +'%Y-%m-%d %H:%M UTC'))"
-            git push
-          else
-            echo "No result changes."
+          if git diff --quiet -- data/results.json; then
+            echo "No result changes."; exit 0
           fi
+          git add data/results.json
+          git commit -m "Update results ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+          for i in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push; then
+              echo "Pushed."; exit 0
+            fi
+            echo "Push attempt $i failed, retrying…"; sleep 4
+          done
+          echo "Push failed after retries."; exit 1
