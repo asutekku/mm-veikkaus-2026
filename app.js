@@ -238,22 +238,12 @@ function bettingStats() {
   return { rows, perMatch, resolved: res.length, bigShot };
 }
 
-/* ----- top scorer normalization ----- */
-const SCORER_CANON = [
-  { keys: ['mbappe'], name: 'Kylian Mbappé', sur: 'mbappe' },
-  { keys: ['haaland'], name: 'Erling Haaland', sur: 'haaland' },
-  { keys: ['dembele'], name: 'Ousmane Dembélé', sur: 'dembele' },
-  { keys: ['kane'], name: 'Harry Kane', sur: 'kane' },
-  { keys: ['yamal'], name: 'Lamine Yamal', sur: 'yamal' },
-  { keys: ['lautaro', 'martinez'], name: 'Lautaro Martínez', sur: 'martinez' },
-  { keys: ['pele'], name: 'Pelé', sur: 'pele' },
-];
+/* ----- top scorer normalization (shared with sim.js) ----- */
 const deburr = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// Canonical scorer name via the shared simulation helper, so every view agrees.
 function canonScorer(raw) {
-  const d = deburr(raw).replace(/[^a-z ]/g, ' ');
-  for (const c of SCORER_CANON) if (c.keys.some(k => d.includes(k))) return c;
-  const last = d.trim().split(/\s+/).pop() || raw;
-  return { name: raw.replace(/[!*].*$/, '').replace(/\(.*\)/, '').trim(), sur: last };
+  const name = (window.Sim && window.Sim.canonScorer) ? window.Sim.canonScorer(raw, state.res.scorers || []) : String(raw || '').trim();
+  return { name, sur: deburr(name).split(/\s+/).pop() || '' };
 }
 function goalsFor(sur) {
   const list = state.res.scorers || [];
@@ -691,25 +681,44 @@ function renderForecast() {
 }
 
 /* ----- bonus ----- */
+// Normalized picks for a player+category as [{name, p|null}].
+// Names are always canonical/Finnish; probability is filled in only when revealed.
+function bonusPicks(p, key) {
+  const pp = (state.showProb && state.proj && state.proj.playerPicks[p]) ? state.proj.playerPicks[p] : null;
+  if (pp) {
+    if (key === 'semifinal') return pp.sf.map(x => ({ name: fiName(x.name), p: x.p }));
+    if (key === 'final') return pp.fin.map(x => ({ name: fiName(x.name), p: x.p }));
+    if (key === 'champion') return pp.champ ? [{ name: fiName(pp.champ.name), p: pp.champ.p }] : [];
+    if (key === 'topscorer') return pp.ts ? [{ name: pp.ts.name, p: pp.ts.p }] : [];
+  }
+  // cheap normalization (names only) — works even when probabilities are hidden
+  const raw = (state.pred.bonus.find(b => b.key === key) || { picks: {} }).picks[p] || '';
+  if (!raw.trim()) return [];
+  if (key === 'topscorer') return [{ name: canonScorer(raw).name, p: null }];
+  const idx = state.teamIndex;
+  if (!idx) return null; // signal: fall back to raw text
+  let toks = idx.extractTokens(raw);
+  if (key === 'champion') toks = toks.slice(0, 1);
+  return toks.map(t => ({ name: fiName(idx.byToken[t].name), p: null }));
+}
+
 function renderBonus() {
   const { players } = state.pred;
-  const pp = (state.showProb && state.proj) ? state.proj.playerPicks : null;
   const chip = (name, p) => `<span class="pchip ${p >= 0.4 ? 'hi' : p >= 0.15 ? 'mid' : ''}">${esc(name)}${p != null ? ` <b>${pct(p)}</b>` : ''}</span>`;
 
   const cats = [
-    { key: 'semifinal', label: 'Välieräjoukkueet (4 parasta)', sub: '5 p / oikea joukkue', get: p => pp && pp[p] ? pp[p].sf : null },
-    { key: 'final', label: 'Finaalijoukkueet', sub: '10 p / oikea joukkue', get: p => pp && pp[p] ? pp[p].fin : null },
-    { key: 'champion', label: 'Maailmanmestari', sub: '+10 p', get: p => pp && pp[p] && pp[p].champ ? [pp[p].champ] : null },
-    { key: 'topscorer', label: 'Maalikuningas', sub: '10 p', get: p => pp && pp[p] && pp[p].ts ? [pp[p].ts] : null },
+    { key: 'semifinal', label: 'Välieräjoukkueet (4 parasta)', sub: '5 p / oikea joukkue' },
+    { key: 'final', label: 'Finaalijoukkueet', sub: '10 p / oikea joukkue' },
+    { key: 'champion', label: 'Maailmanmestari', sub: '+10 p' },
+    { key: 'topscorer', label: 'Maalikuningas', sub: '10 p' },
   ];
 
   const blocks = cats.map(cat => {
     const raw = state.pred.bonus.find(b => b.key === cat.key) || { picks: {} };
     const rows = players.map(p => {
-      const picks = cat.get(p);
-      const isTeam = cat.key !== 'topscorer';
+      const picks = bonusPicks(p, cat.key);
       let cell;
-      if (picks && picks.length) cell = `<div class="pchips">${picks.map(x => chip(isTeam ? fiName(x.name) : x.name, x.p)).join('')}</div>`;
+      if (picks && picks.length) cell = `<div class="pchips">${picks.map(x => chip(x.name, x.p)).join('')}</div>`;
       else cell = `<span class="muted">${esc(raw.picks[p] || '—')}</span>`;
       return `<tr><td class="who">${esc(p)}</td><td>${cell}</td></tr>`;
     }).join('');
@@ -770,6 +779,10 @@ async function boot() {
     const [pred, res] = await Promise.all([loadJSON('data/predictions.json'), loadJSON('data/results.json')]);
     state.pred = pred; state.res = res;
     document.getElementById('updated').textContent = 'Päivitetty ' + fmtUpdated(res.updatedAt);
+    // cheap team index for name normalization (no simulation — not a spoiler)
+    if (window.Sim && window.Teams && res.standings && res.standings.length) {
+      try { state.teamIndex = window.Sim.buildIndex(res.standings, window.Teams); } catch (e) { console.error(e); }
+    }
     document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
 
     applyToggleLabel();

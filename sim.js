@@ -24,6 +24,28 @@
     return k - 1;
   }
   const sigmoid = x => 1 / (1 + Math.exp(-x));
+  const deburr = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  // Canonical scorer name. Matches the raw pick to the live top-scorer list by
+  // surname (so "Mbappe", "mbappe (sama vanha)" etc. all become the API spelling),
+  // else falls back to a curated spelling.
+  const SCORER_FALLBACK = {
+    mbappe: 'Kylian Mbappé', haaland: 'Erling Haaland', dembele: 'Ousmane Dembélé',
+    kane: 'Harry Kane', yamal: 'Lamine Yamal', lautaro: 'Lautaro Martínez',
+    martinez: 'Lautaro Martínez', pele: 'Pelé',
+  };
+  function surnameOf(raw) {
+    return deburr(String(raw || '').replace(/\(.*?\)/g, ' ')).replace(/[^a-z ]/g, ' ').trim().split(/\s+/).pop() || '';
+  }
+  function canonScorer(raw, apiScorers) {
+    const sur = surnameOf(raw);
+    if (sur.length >= 3) {
+      const hit = (apiScorers || []).find(s => deburr(s.name).includes(sur));
+      if (hit) return hit.name;
+    }
+    if (SCORER_FALLBACK[sur]) return SCORER_FALLBACK[sur];
+    return String(raw || '').replace(/\(.*?\)/g, '').replace(/[!*?]/g, '').trim() || raw;
+  }
 
   // ---- build a token index from the standings (canonical = English name) ----
   function buildIndex(standings, T) {
@@ -137,27 +159,23 @@
 
     const groups = {}; teams.forEach(t => { (groups[t.group] = groups[t.group] || []).push(t.token); });
 
-    // top-scorer candidates
-    const deburr = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    // top-scorer candidates (all names canonicalised)
     const apiScorers = res.scorers || [];
     const candMap = {};
     const addCand = (name, teamName, goals, played) => {
-      if (!name) return; const key = deburr(name).split(/\s+/).pop();
+      if (!name) return; const key = surnameOf(name);
       if (!candMap[key]) candMap[key] = { name, teamTok: tokenOf(teamName), goals: goals || 0, played: played || 2 };
     };
     apiScorers.forEach(s => addCand(s.name, s.team, s.goals, 2));
     players.forEach(p => {
       const raw = (tsRow[p] || '').trim(); if (!raw) return;
-      const sur = deburr(raw).replace(/[^a-z ]/g, ' ').trim().split(/\s+/).pop();
-      if (!apiScorers.find(s => deburr(s.name).includes(sur) && sur.length >= 3)) addCand(raw, null, 0, 2);
+      addCand(canonScorer(raw, apiScorers), null, 0, 2); // canonical; no-op if already a candidate
     });
     const cands = Object.values(candMap);
     const playerTsKey = {};
     players.forEach(p => {
       const raw = (tsRow[p] || '').trim();
-      const sur = deburr(raw).replace(/[^a-z ]/g, ' ').trim().split(/\s+/).pop();
-      const c = cands.find(c => deburr(c.name).split(/\s+/).pop() === sur || (deburr(c.name).includes(sur) && sur.length >= 3));
-      playerTsKey[p] = c ? c.name : null;
+      playerTsKey[p] = raw ? canonScorer(raw, apiScorers) : null;
     });
 
     const BASE = 1.35, K = 1.0;
@@ -270,7 +288,7 @@
         sf: [...pick[p].sf].map(t => ({ ...annot(t), p: probOf[t] ? probOf[t].sf : 0 })),
         fin: [...pick[p].fin].map(t => ({ ...annot(t), p: probOf[t] ? probOf[t].fin : 0 })),
         champ: pick[p].champ ? { ...annot(pick[p].champ), p: probOf[pick[p].champ] ? probOf[pick[p].champ].champ : 0 } : null,
-        ts: pick[p].ts ? { name: pick[p].ts, p: (playerTsKey[p] && tsProb[playerTsKey[p]]) || 0 } : null,
+        ts: pick[p].ts ? { name: playerTsKey[p] || pick[p].ts, p: (playerTsKey[p] && tsProb[playerTsKey[p]]) || 0 } : null,
       };
     });
     return { sims: SIMS, teamProb, topscorers, playerProj, playerPicks };
@@ -306,7 +324,7 @@
     return { players, steps, total: pred.matches.length };
   }
 
-  const Sim = { project, winTimeline, prepare, runSims, buildIndex };
+  const Sim = { project, winTimeline, prepare, runSims, buildIndex, canonScorer };
   if (typeof module !== 'undefined' && module.exports) module.exports = Sim;
   if (typeof root !== 'undefined') root.Sim = Sim;
 })(typeof window !== 'undefined' ? window : this);
