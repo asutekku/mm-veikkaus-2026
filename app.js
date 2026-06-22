@@ -13,6 +13,7 @@ async function loadJSON(p) {
   return r.json();
 }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fiName = n => (window.Teams && window.Teams.fiTeam) ? window.Teams.fiTeam(n) : n;
 const R = () => state.res.results || {};
 const resultFor = i => R()[String(i)] || null;
 
@@ -450,9 +451,9 @@ function renderScorer() {
     }).join('');
 
   return `<div class="panel">
-    <div class="panel-h"><h2>Maalikuningas-kisa</h2><span class="sub">Golden Boot</span></div>
+    <div class="panel-h"><h2>Maalikuningas-kisa</h2><span class="sub">maalipörssi</span></div>
     ${gb ? `<div class="boot-lead"><div class="gb"><span class="g num">${gb.goals}</span>
-      <span><span class="n">${esc(gb.name)}</span> <span class="t">${esc(gb.team || '')}</span><br>
+      <span><span class="n">${esc(gb.name)}</span> <span class="t">${esc(fiName(gb.team || ''))}</span><br>
       <span class="chip-mini">KÄRJESSÄ NYT</span></span></div></div>` : ''}
     <table class="boot-list"><tbody>${rows || '<tr><td class="muted" style="padding:14px 16px">Ei veikkauksia.</td></tr>'}</tbody></table>
   </div>`;
@@ -470,7 +471,7 @@ function renderInsights(ts, st) {
     { k: 'Tasapelit', sub: 'kaikista', v: `${ts.draws}`, vs: `${Math.round(ts.draws / Math.max(1, ts.n) * 100)}%` },
   ];
   return `<div class="panel">
-    <div class="panel-h"><h2>Turnausdata</h2><span class="sub">insights</span></div>
+    <div class="panel-h"><h2>Turnausdata</h2><span class="sub">tilastot</span></div>
     <div class="stat-rows">${rows.map(r => `<div class="row">
       <div class="k">${r.k}<small>${r.sub}</small></div>
       <div class="v">${r.v}<small>${r.vs}</small></div></div>`).join('')}</div>
@@ -604,7 +605,7 @@ function renderBetting() {
   const lb = `<div class="panel mb">
     <div class="panel-h"><h2>Vedonlyönti­liiga</h2><span class="sub">€${STAKE}/ottelu · netto­voitto</span></div>
     <div class="tbl-scroll"><table class="stand">
-      <thead><tr><th class="l">#</th><th class="l">Pelaaja</th><th>Netto</th><th>ROI</th><th>Panostettu</th><th>Osumat</th><th class="l hide-sm">Paras veto</th></tr></thead>
+      <thead><tr><th class="l">#</th><th class="l">Pelaaja</th><th>Netto</th><th>Tuotto-%</th><th>Panostettu</th><th>Osumat</th><th class="l hide-sm">Paras veto</th></tr></thead>
       <tbody>${lbRows}</tbody></table></div></div>`;
 
   // per-match odds table
@@ -673,7 +674,7 @@ function renderForecast() {
 
   const teams = proj.teamProb.filter(t => t.sf > 0.005).slice(0, 16);
   const tRows = teams.map(t => `<tr>
-     <td class="l st-name">${esc(t.name)}</td>
+     <td class="l st-name">${esc(fiName(t.name))}</td>
      <td class="num">${pct(t.sf)}</td><td class="num">${pct(t.fin)}</td>
      <td class="num ${t.champ >= 0.1 ? 'pl-pos' : ''}">${pct(t.champ)}</td></tr>`).join('');
   const teamPanel = `<div class="panel"><div class="panel-h"><h2>Joukkueet</h2><span class="sub">välierä / finaali / mestari</span></div>
@@ -706,8 +707,9 @@ function renderBonus() {
     const raw = state.pred.bonus.find(b => b.key === cat.key) || { picks: {} };
     const rows = players.map(p => {
       const picks = cat.get(p);
+      const isTeam = cat.key !== 'topscorer';
       let cell;
-      if (picks && picks.length) cell = `<div class="pchips">${picks.map(x => chip(x.name, x.p)).join('')}</div>`;
+      if (picks && picks.length) cell = `<div class="pchips">${picks.map(x => chip(isTeam ? fiName(x.name) : x.name, x.p)).join('')}</div>`;
       else cell = `<span class="muted">${esc(raw.picks[p] || '—')}</span>`;
       return `<tr><td class="who">${esc(p)}</td><td>${cell}</td></tr>`;
     }).join('');

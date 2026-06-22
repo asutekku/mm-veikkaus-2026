@@ -86,6 +86,25 @@ function teamMatches(finnishName, apiName) {
   return accepted.some(x => x && (a.includes(x) || x.includes(a)) && Math.min(a.length, x.length) >= 4);
 }
 
-const Teams = { norm, aliasesFor, teamMatches, FI_TO_EN };
+// English (API) team name -> Finnish display name, keyed by normalized English.
+const EN_TO_FI = {
+  mexico: 'Meksiko', southafrica: 'Etelä-Afrikka', southkorea: 'Etelä-Korea', korearepublic: 'Etelä-Korea',
+  czechia: 'Tšekki', czechrepublic: 'Tšekki', canada: 'Kanada',
+  bosniaherzegovina: 'Bosnia ja Hertsegovina', bosniaandherzegovina: 'Bosnia ja Hertsegovina',
+  unitedstates: 'Yhdysvallat', unitedstatesofamerica: 'Yhdysvallat', usa: 'Yhdysvallat',
+  paraguay: 'Paraguay', qatar: 'Qatar', switzerland: 'Sveitsi', brazil: 'Brasilia', morocco: 'Marokko',
+  haiti: 'Haiti', scotland: 'Skotlanti', australia: 'Australia', turkey: 'Turkki', turkiye: 'Turkki',
+  germany: 'Saksa', curacao: 'Curaçao', netherlands: 'Hollanti', holland: 'Hollanti', japan: 'Japani',
+  ivorycoast: 'Norsunluurannikko', cotedivoire: 'Norsunluurannikko', ecuador: 'Ecuador', sweden: 'Ruotsi',
+  tunisia: 'Tunisia', spain: 'Espanja', capeverde: 'Kap Verde', caboverde: 'Kap Verde', capeverdeislands: 'Kap Verde',
+  belgium: 'Belgia', egypt: 'Egypti', saudiarabia: 'Saudi-Arabia', uruguay: 'Uruguay', iran: 'Iran',
+  newzealand: 'Uusi-Seelanti', france: 'Ranska', senegal: 'Senegal', iraq: 'Irak', norway: 'Norja',
+  argentina: 'Argentiina', algeria: 'Algeria', austria: 'Itävalta', jordan: 'Jordania', portugal: 'Portugali',
+  congo: 'Kongo', drcongo: 'Kongo', congodr: 'Kongo', democraticrepublicofcongo: 'Kongo', republicofcongo: 'Kongo',
+  england: 'Englanti', croatia: 'Kroatia', ghana: 'Ghana', panama: 'Panama', uzbekistan: 'Uzbekistan', colombia: 'Kolumbia',
+};
+function fiTeam(name) { return EN_TO_FI[norm(name)] || name; }
+
+const Teams = { norm, aliasesFor, teamMatches, fiTeam, FI_TO_EN, EN_TO_FI };
 if (typeof module !== 'undefined' && module.exports) module.exports = Teams;
 if (typeof window !== 'undefined') window.Teams = Teams;
