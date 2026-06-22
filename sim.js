@@ -59,17 +59,26 @@
       }
       cache[n] = res; return res;
     }
-    // find ALL team tokens mentioned in a free-text string (order of first appearance)
+    // find ALL team tokens mentioned in a free-text string (order of first appearance).
+    // Matches on WORD boundaries (not raw substrings) so that e.g. "Englanti Ranska"
+    // does not spuriously yield "Iran" from the merged letters ...nti·ran·ska.
     function extractTokens(str) {
-      const n = norm(str || '');
+      const words = String(str || '').split(/[^A-Za-zÀ-ÿ0-9]+/).map(w => norm(w)).filter(Boolean);
+      // every concatenation of up to 4 consecutive words -> earliest word index
+      const concat = new Map();
+      for (let i = 0; i < words.length; i++) {
+        let s = '';
+        for (let j = i; j < words.length && j < i + 4; j++) { s += words[j]; if (!concat.has(s)) concat.set(s, i); }
+      }
       const hits = [];
       teams.forEach(t => {
         let pos = -1;
-        for (const sp of spell[t.token]) { if (sp.length >= 3) { const i = n.indexOf(sp); if (i >= 0 && (pos < 0 || i < pos)) pos = i; } }
+        for (const sp of spell[t.token]) {
+          if (sp.length >= 2 && concat.has(sp)) { const p = concat.get(sp); if (pos < 0 || p < pos) pos = p; }
+        }
         if (pos >= 0) hits.push({ token: t.token, pos });
       });
       hits.sort((a, b) => a.pos - b.pos);
-      // de-dupe, drop tokens fully contained in an earlier-found longer token's span isn't needed; tokens are distinct teams
       const seen = new Set(); const out = [];
       hits.forEach(h => { if (!seen.has(h.token)) { seen.add(h.token); out.push(h.token); } });
       return out;
