@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-22T15:13:18.463Z",
+  "updatedAt": "2026-06-22T17:02:38.335Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -730,8 +730,8 @@
       "team": "Argentina",
       "group": "Group J",
       "position": 1,
-      "played": 1,
-      "points": 3,
+      "played": 2,
+      "points": 4,
       "gf": 3,
       "ga": 0,
       "gd": 3
@@ -740,8 +740,8 @@
       "team": "Austria",
       "group": "Group J",
       "position": 2,
-      "played": 1,
-      "points": 3,
+      "played": 2,
+      "points": 4,
       "gf": 3,
       "ga": 1,
       "gd": 2
