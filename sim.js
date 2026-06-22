@@ -24,6 +24,21 @@
     return k - 1;
   }
   const sigmoid = x => 1 / (1 + Math.exp(-x));
+
+  // shared match model parameters (used by both the simulation and the luck index)
+  const MODEL_BASE = 1.35, MODEL_K = 1.0;
+  function poissonPMF(lambda, k) { let p = Math.exp(-lambda); for (let i = 1; i <= k; i++) p *= lambda / i; return p; }
+  // closed-form 1/X/2 probabilities from two team ratings (Poisson goals)
+  function match1X2(rH, rA) {
+    const lH = MODEL_BASE * Math.exp(MODEL_K * (rH - rA)), lA = MODEL_BASE * Math.exp(MODEL_K * (rA - rH));
+    const MAX = 10, ph = [], pa = [];
+    for (let i = 0; i <= MAX; i++) { ph[i] = poissonPMF(lH, i); pa[i] = poissonPMF(lA, i); }
+    let p1 = 0, px = 0, p2 = 0;
+    for (let i = 0; i <= MAX; i++) for (let j = 0; j <= MAX; j++) { const pr = ph[i] * pa[j]; if (i > j) p1 += pr; else if (i === j) px += pr; else p2 += pr; }
+    const s = p1 + px + p2 || 1;
+    return { '1': p1 / s, 'X': px / s, '2': p2 / s };
+  }
+
   const deburr = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
   // Canonical scorer name. Matches the raw pick to the live top-scorer list by
@@ -178,7 +193,7 @@
       playerTsKey[p] = raw ? canonScorer(raw, apiScorers) : null;
     });
 
-    const BASE = 1.35, K = 1.0;
+    const BASE = MODEL_BASE, K = MODEL_K;
     const playScore = (ra, rb) => [poisson(BASE * Math.exp(K * (ra - rb))), poisson(BASE * Math.exp(K * (rb - ra)))];
 
     return { idx, teams, byToken, players, groupMatches, groupGamesByTeam, pick, prior, rating, groups, cands, playerTsKey, playScore, outFromScore, resolvedIdx: groupMatches.filter(m => m.actual).map(m => m.idx) };
@@ -324,7 +339,34 @@
     return { players, steps, total: pred.matches.length };
   }
 
-  const Sim = { project, winTimeline, prepare, runSims, buildIndex, canonScorer };
+  // ---- luck index: actual points vs expected points (xP) on played group games ----
+  function luckIndex(pred, res, T) {
+    const M = prepare(pred, res, T);
+    const { players, groupMatches, rating } = M;
+    const NP = players.length;
+    const xp = new Array(NP).fill(0), act = new Array(NP).fill(0);
+    let best = null, worst = null; // single luckiest / unluckiest pick across everyone
+    let resolved = 0;
+    for (const m of groupMatches) {
+      if (!m.actual) continue;
+      resolved++;
+      const P = match1X2(rating[m.h], rating[m.a]);
+      for (const o of ['1', 'X', '2']) {
+        const arr = m.byOut[o], p = P[o];
+        const correct = o === m.actual.out;
+        for (const pi of arr) {
+          xp[pi] += p; if (correct) act[pi]++;
+          if (correct && (!best || p < best.p)) best = { player: players[pi], m, p, out: o };
+          if (!correct && (!worst || p > worst.p)) worst = { player: players[pi], m, p, out: o };
+        }
+      }
+    }
+    const rows = players.map((p, pi) => ({ name: p, actual: act[pi], xp: xp[pi], luck: act[pi] - xp[pi] }))
+      .sort((a, b) => b.luck - a.luck);
+    return { rows, resolved, best, worst };
+  }
+
+  const Sim = { project, winTimeline, luckIndex, prepare, runSims, buildIndex, canonScorer };
   if (typeof module !== 'undefined' && module.exports) module.exports = Sim;
   if (typeof root !== 'undefined') root.Sim = Sim;
 })(typeof window !== 'undefined' ? window : this);

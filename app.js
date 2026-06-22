@@ -2,7 +2,7 @@
 
 const state = {
   pred: null, res: null, sel: new Set(),
-  proj: null, timeline: null,
+  proj: null, timeline: null, luck: null, teamIndex: null,
   // forecasts/probabilities hidden by default to preserve the suspense
   showProb: (() => { try { return localStorage.getItem('mmv_showProb') === '1'; } catch { return false; } })(),
 };
@@ -677,7 +677,36 @@ function renderForecast() {
 
   document.getElementById('view-forecast').innerHTML =
     `<p class="muted" style="margin-top:0">Koko turnaus simuloidaan <b>${proj.sims}×</b> loppuun: jäljellä olevat alkulohko-ottelut, jatkopelit ja maalikuningaskisa. Joukkueiden vahvuus perustuu <b>alkulohkon tuloksiin</b> ja <b>perheen veikkauksiin</b>. Jatkopelien parit arvotaan joka kierroksella (virallista kaaviota ei vielä julkaistu).</p>
-     ${rules}${projPanel}<div class="grid grid-2">${teamPanel}${tsPanel}</div>`;
+     ${rules}${projPanel}${renderLuck()}<div class="grid grid-2">${teamPanel}${tsPanel}</div>`;
+}
+
+function renderLuck() {
+  const colors = playerColors();
+  const li = state.luck;
+  if (!li) return '';
+  const rows = li.rows;
+  const maxAbs = Math.max(0.5, ...rows.map(r => Math.abs(r.luck)));
+  const fmtPick = x => x ? `${esc(x.player)} · ${x.out} (${esc(fiName(x.m.h))}–${esc(fiName(x.m.a))}, ${Math.round(x.p * 100)} %)` : '—';
+
+  const body = rows.map((r, i) => {
+    const w = (Math.abs(r.luck) / maxAbs) * 50;
+    const bar = `<div class="divbar"><i class="${r.luck >= 0 ? 'pos' : 'neg'}" style="${r.luck >= 0 ? 'left:50%' : `right:50%`};width:${w.toFixed(1)}%"></i></div>`;
+    return `<tr>
+      <td class="l st-rank">${i + 1}</td>
+      <td class="l"><span class="st-name" style="border-left:3px solid ${colors[r.name]};padding-left:7px">${esc(r.name)}</span></td>
+      <td class="num">${r.actual}</td>
+      <td class="num muted">${r.xp.toFixed(1)}</td>
+      <td class="num ${r.luck >= 0 ? 'pl-pos' : 'pl-neg'}">${r.luck >= 0 ? '+' : '−'}${Math.abs(r.luck).toFixed(1)}</td>
+      <td class="barcell hide-sm">${bar}</td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="panel mb">
+    <div class="panel-h"><h2>Tuuri-indeksi</h2><span class="sub">osumat vs. odotetut (xP)</span></div>
+    <p class="muted" style="padding:10px 16px 0;margin:0">Odotuspisteet (xP) = montako osumaa veikkauksesi olisi keskimäärin tuottanut joukkueiden vahvuuksien perusteella. <b>Tuuri = osumat − xP</b>: plus = jalkapallojumalat suosivat, miinus = vahvat veikkaukset pettivät.
+    🍀 Onnekkain: ${fmtPick(li.best)} · 🥶 Kylmin suihku: ${fmtPick(li.worst)}</p>
+    <div class="tbl-scroll"><table class="stand"><thead><tr><th class="l">#</th><th class="l">Pelaaja</th><th>Osumat</th><th>xP</th><th>Tuuri</th><th class="l barcell hide-sm"></th></tr></thead><tbody>${body}</tbody></table></div>
+  </div>`;
 }
 
 /* ----- bonus ----- */
@@ -757,6 +786,7 @@ function computeProjection() {
   setTimeout(() => {
     try {
       state.proj = window.Sim.project(state.pred, state.res, window.Teams, { sims: 3000 });
+      try { state.luck = window.Sim.luckIndex(state.pred, state.res, window.Teams); } catch (e) { console.error('luck failed', e); }
       renderAll();
       setTimeout(() => {
         try {
