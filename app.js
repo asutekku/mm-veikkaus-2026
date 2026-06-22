@@ -80,10 +80,16 @@ function standings() {
 
   const leaderPts = Math.max(...players.map(p => pts[p]));
 
-  const win = winProbabilities(remaining, pts);
+  // win % and projected final total come from the full-tournament simulation
+  // (group 1X2 points + bonus points). Falls back to a group-only estimate if
+  // the sim hasn't loaded.
+  const proj = state.proj;
+  const projBy = {};
+  if (proj) proj.playerProj.forEach(p => projBy[p.name] = p);
+  const fallbackWin = proj ? null : winProbabilities(remaining, pts);
 
   const rows = players.map(p => {
-    const maxPossible = pts[p] + remaining;
+    const pr = projBy[p];
     return {
       name: p,
       pts: pts[p],
@@ -92,9 +98,9 @@ function standings() {
       form: form[p],
       rank: nowRank[p],
       delta: prevRank ? prevRank[p] - nowRank[p] : null,
-      maxPossible,
-      eliminated: maxPossible < leaderPts,
-      win: win[p] || 0,
+      projTotal: pr ? pr.expTotal : null,
+      expBonus: pr ? pr.expBonus : null,
+      win: pr ? pr.win : (fallbackWin ? fallbackWin[p] : 0),
     };
   }).sort((a, b) => a.rank - b.rank || b.pts - a.pts || a.name.localeCompare(b.name, 'fi'));
 
@@ -331,7 +337,7 @@ function renderStandingsTable(st, colors) {
     <th class="l">#</th><th></th><th class="l">Pelaaja</th>
     <th>Pist</th><th class="l barcell hide-sm">Eteneminen</th>
     <th class="hide-sm">Osuma</th><th class="hide-sm">Viim. 5</th>
-    <th>Voitto-%</th><th>Tila</th></tr></thead>`;
+    <th>Voitto-%</th><th>Ennuste</th></tr></thead>`;
   const max = st.leaderPts || 1;
   const body = st.rows.map(r => {
     const d = r.delta;
@@ -341,10 +347,10 @@ function renderStandingsTable(st, colors) {
       : '<span class="delta flat">–</span>';
     const form = r.form.map(f => `<i class="${f}"></i>`).join('') || '<i class="x"></i>';
     const winPct = r.win >= 0.001 ? (r.win * 100).toFixed(r.win >= 0.1 ? 0 : 1) + '%' : '<0.1%';
-    const status = r.eliminated
-      ? '<span class="badge out">PELISTÄ</span>'
-      : (r.rank === 1 ? '<span class="badge live">KÄRJESSÄ</span>' : '<span class="muted num">' + r.maxPossible + ' max</span>');
-    return `<tr class="tr-${r.rank}${r.eliminated ? ' tr-out' : ''}">
+    const status = r.projTotal != null
+      ? `<span class="num" title="projisoitu lopputulos (alkulohko + bonukset)">~${Math.round(r.projTotal)} p</span>`
+      : (r.rank === 1 ? '<span class="badge live">KÄRJESSÄ</span>' : '<span class="muted">—</span>');
+    return `<tr class="tr-${r.rank}">
       <td class="l st-rank">${r.rank}</td>
       <td>${dCell}</td>
       <td class="l"><span class="st-name" style="border-left:3px solid ${colors[r.name]};padding-left:7px">${esc(r.name)}</span></td>
@@ -558,44 +564,97 @@ function renderBetting() {
      ${ribbon}${lb}${oddsTable}`;
 }
 
+/* ----- forecast ----- */
+const pct = v => v == null ? '—' : v < 0.005 ? '<1%' : Math.round(v * 100) + '%';
+
+function renderForecast() {
+  const colors = playerColors();
+  const proj = state.proj;
+  if (!proj) { document.getElementById('view-forecast').innerHTML = '<p class="muted">Ennustetta ei voitu laskea (simulaatiodata puuttuu).</p>'; return; }
+
+  const rules = `<div class="panel mb"><div class="panel-h"><h2>Pisteytys</h2><span class="sub">säännöt</span></div>
+    <div class="stat-rows">
+      <div class="row"><div class="k">Oikea merkki alkulohkossa</div><div class="v">1 p</div></div>
+      <div class="row"><div class="k">Välieräjoukkue<small>per oikein veikattu joukkue (4 kpl)</small></div><div class="v">5 p</div></div>
+      <div class="row"><div class="k">Finaalijoukkue<small>per oikein veikattu joukkue (2 kpl)</small></div><div class="v">10 p</div></div>
+      <div class="row"><div class="k">Oikea mestari<small>finalistipisteiden lisäksi</small></div><div class="v">+10 p</div></div>
+      <div class="row"><div class="k">Maalikuningas</div><div class="v">10 p</div></div>
+    </div></div>`;
+
+  const maxTot = Math.max(...proj.playerProj.map(p => p.expTotal)) || 1;
+  const projRows = proj.playerProj.map((p, i) => `<tr class="tr-${i + 1}">
+     <td class="l st-rank">${i + 1}</td>
+     <td class="l"><span class="st-name" style="border-left:3px solid ${colors[p.name]};padding-left:7px">${esc(p.name)}</span></td>
+     <td class="winp ${p.win >= 0.15 ? 'hot' : ''}">${pct(p.win)}</td>
+     <td class="num muted">${p.curGroup}</td>
+     <td class="num muted">+${p.expBonus.toFixed(1)}</td>
+     <td class="st-pts">${p.expTotal.toFixed(1)}</td>
+     <td class="l barcell hide-sm"><div class="minibar"><span style="width:${p.expTotal / maxTot * 100}%"></span></div></td>
+   </tr>`).join('');
+  const projPanel = `<div class="panel mb"><div class="panel-h"><h2>Projisoitu lopputulos</h2><span class="sub">${proj.sims} simulaatiota · voitto-% = mestaruus­todennäköisyys</span></div>
+    <div class="tbl-scroll"><table class="stand"><thead><tr><th class="l">#</th><th class="l">Pelaaja</th><th>Voitto-%</th><th>Lohko nyt</th><th>Bonus odot.</th><th>Yht. odot.</th><th class="l barcell hide-sm"></th></tr></thead><tbody>${projRows}</tbody></table></div></div>`;
+
+  const teams = proj.teamProb.filter(t => t.sf > 0.005).slice(0, 16);
+  const tRows = teams.map(t => `<tr>
+     <td class="l st-name">${esc(t.name)}</td>
+     <td class="num">${pct(t.sf)}</td><td class="num">${pct(t.fin)}</td>
+     <td class="num ${t.champ >= 0.1 ? 'pl-pos' : ''}">${pct(t.champ)}</td></tr>`).join('');
+  const teamPanel = `<div class="panel"><div class="panel-h"><h2>Joukkueet</h2><span class="sub">välierä / finaali / mestari</span></div>
+    <div class="tbl-scroll"><table class="stand"><thead><tr><th class="l">Joukkue</th><th>VE</th><th>Fin</th><th>Mestari</th></tr></thead><tbody>${tRows}</tbody></table></div></div>`;
+
+  const ts = proj.topscorers.filter(t => t.p > 0.003).slice(0, 10);
+  const tsRows = ts.map(t => `<tr><td class="l st-name">${esc(t.name)}</td><td class="num muted">${t.goals}</td><td class="num ${t.p >= 0.15 ? 'pl-pos' : ''}">${pct(t.p)}</td></tr>`).join('');
+  const tsPanel = `<div class="panel"><div class="panel-h"><h2>Maalikuningas</h2><span class="sub">todennäköisyys</span></div>
+    <div class="tbl-scroll"><table class="stand"><thead><tr><th class="l">Pelaaja</th><th>Maalit</th><th>Todennäk.</th></tr></thead><tbody>${tsRows}</tbody></table></div></div>`;
+
+  document.getElementById('view-forecast').innerHTML =
+    `<p class="muted" style="margin-top:0">Koko turnaus simuloidaan <b>${proj.sims}×</b> loppuun: jäljellä olevat alkulohko-ottelut, jatkopelit ja maalikuningaskisa. Joukkueiden vahvuus perustuu <b>alkulohkon tuloksiin</b> ja <b>perheen veikkauksiin</b>. Jatkopelien parit arvotaan joka kierroksella (virallista kaaviota ei vielä julkaistu).</p>
+     ${rules}${projPanel}<div class="grid grid-2">${teamPanel}${tsPanel}</div>`;
+}
+
 /* ----- bonus ----- */
 function renderBonus() {
   const { players } = state.pred;
-  const blocks = state.pred.bonus.map(b => {
-    // tally most-common picks (for champion/final pick popularity)
-    const counts = {};
-    players.forEach(p => {
-      const v = (b.picks[p] || '').trim(); if (!v) return;
-      (b.key === 'champion' ? [v] : v.split(/[,\-–&]|\bja\b|\bvs\b/i)).forEach(tok => {
-        const t = tok.trim(); if (t.length < 2) return;
-        const key = deburr(t);
-        counts[key] = counts[key] || { label: t, n: 0 };
-        counts[key].n++;
-      });
-    });
-    const top = Object.values(counts).sort((a, b) => b.n - a.n).slice(0, 6);
-    const tally = top.length ? `<div class="tally">${top.map(t => `<span class="t">${esc(t.label)} <b>${t.n}</b></span>`).join('')}</div>` : '';
+  const pp = state.proj ? state.proj.playerPicks : null;
+  const chip = (name, p) => `<span class="pchip ${p >= 0.4 ? 'hi' : p >= 0.15 ? 'mid' : ''}">${esc(name)}${p != null ? ` <b>${pct(p)}</b>` : ''}</span>`;
 
+  const cats = [
+    { key: 'semifinal', label: 'Välieräjoukkueet (4 parasta)', sub: '5 p / oikea joukkue', get: p => pp && pp[p] ? pp[p].sf : null },
+    { key: 'final', label: 'Finaalijoukkueet', sub: '10 p / oikea joukkue', get: p => pp && pp[p] ? pp[p].fin : null },
+    { key: 'champion', label: 'Maailmanmestari', sub: '+10 p', get: p => pp && pp[p] && pp[p].champ ? [pp[p].champ] : null },
+    { key: 'topscorer', label: 'Maalikuningas', sub: '10 p', get: p => pp && pp[p] && pp[p].ts ? [pp[p].ts] : null },
+  ];
+
+  const blocks = cats.map(cat => {
+    const raw = state.pred.bonus.find(b => b.key === cat.key) || { picks: {} };
     const rows = players.map(p => {
-      const v = b.picks[p]; if (!v) return '';
-      return `<tr><td class="who">${esc(p)}</td><td>${esc(v)}</td></tr>`;
+      const picks = cat.get(p);
+      let cell;
+      if (picks && picks.length) cell = `<div class="pchips">${picks.map(x => chip(x.name, x.p)).join('')}</div>`;
+      else cell = `<span class="muted">${esc(raw.picks[p] || '—')}</span>`;
+      return `<tr><td class="who">${esc(p)}</td><td>${cell}</td></tr>`;
     }).join('');
     return `<div class="panel bonus-block">
-      <div class="panel-h"><h2>${esc(b.label)}</h2><span class="sub">${b.key}</span></div>
-      ${tally}<table><tbody>${rows}</tbody></table></div>`;
+      <div class="panel-h"><h2>${esc(cat.label)}</h2><span class="sub">${cat.sub}</span></div>
+      <table><tbody>${rows}</tbody></table></div>`;
   }).join('');
+
   document.getElementById('view-bonus').innerHTML =
-    `<p class="muted" style="margin-top:0">Turnausveikkaukset ratkeavat lopuksi (pisteytetään käsin). Maalikuninkaan tilanne päivittyy ETUSIVU-välilehdellä.</p>${blocks}`;
+    `<p class="muted" style="margin-top:0">Prosentti = nykyinen todennäköisyys, että veikkaus osuu (simulaatiosta). Tarkat pisteet ratkeavat turnauksen edetessä.</p>${blocks}`;
 }
 
 /* ----- tabs/boot ----- */
 function setView(n) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.view === n));
-  ['dash', 'matches', 'betting', 'bonus'].forEach(v => document.getElementById('view-' + v).hidden = v !== n);
+  ['dash', 'matches', 'forecast', 'betting', 'bonus'].forEach(v => document.getElementById('view-' + v).hidden = v !== n);
 }
 function fmtUpdated(iso) {
   try { return new Date(iso).toLocaleString('fi-FI', { dateStyle: 'medium', timeStyle: 'short' }); }
   catch { return iso || '—'; }
+}
+
+function renderAll() {
+  renderDash(); renderMatches(); renderForecast(); renderBetting(); renderBonus();
 }
 
 async function boot() {
@@ -603,8 +662,19 @@ async function boot() {
     const [pred, res] = await Promise.all([loadJSON('data/predictions.json'), loadJSON('data/results.json')]);
     state.pred = pred; state.res = res;
     document.getElementById('updated').textContent = 'Päivitetty ' + fmtUpdated(res.updatedAt);
-    renderDash(); renderMatches(); renderBetting(); renderBonus();
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
+
+    // First paint without the projection (instant), then run the tournament
+    // simulation and re-render so the win % / forecast appear.
+    renderAll();
+    if (window.Sim && window.Teams && res.standings && res.standings.length) {
+      setTimeout(() => {
+        try {
+          state.proj = window.Sim.project(state.pred, state.res, window.Teams, { sims: 3000 });
+          renderAll();
+        } catch (e) { console.error('sim failed', e); }
+      }, 30);
+    }
   } catch (e) {
     document.getElementById('updated').textContent = 'Virhe ladattaessa.';
     console.error(e);

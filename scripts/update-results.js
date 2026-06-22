@@ -105,11 +105,36 @@ async function main() {
     scorers = (existing.scorers || []); // keep previous if fetch fails
   }
 
+  // --- Group standings (for the tournament simulation) ---
+  let standings = [];
+  try {
+    const sd = await api('/standings');
+    (sd.standings || []).forEach(g => {
+      (g.table || []).forEach(t => {
+        standings.push({
+          team: t.team && t.team.name,
+          group: g.group,
+          position: t.position,
+          played: t.playedGames,
+          points: t.points,
+          gf: t.goalsFor,
+          ga: t.goalsAgainst,
+          gd: t.goalDifference,
+        });
+      });
+    });
+    console.log(`Standings: ${standings.length} teams across groups.`);
+  } catch (e) {
+    console.warn('Could not fetch standings:', e.message);
+    standings = (existing.standings || []);
+  }
+
   const out = {
     updatedAt: new Date().toISOString(),
     source: 'football-data.org/WC',
     results,
     scorers,
+    standings,
   };
   fs.writeFileSync(RESULTS_PATH, JSON.stringify(out, null, 2));
 

@@ -57,6 +57,9 @@ const FI_TO_EN = {
   itavalta: ['austria'],
   jordania: ['jordan'],
   portugali: ['portugal'],
+  porugali: ['portugal'],   // common misspelling in the sheet
+  potugali: ['portugal'],
+  equador: ['ecuador'],     // common misspelling in the sheet
   kongo: ['congo', 'drcongo', 'congodr', 'democraticrepublicofcongo', 'republicofcongo'],
   englanti: ['england'],
   kroatia: ['croatia'],
@@ -83,4 +86,6 @@ function teamMatches(finnishName, apiName) {
   return accepted.some(x => x && (a.includes(x) || x.includes(a)) && Math.min(a.length, x.length) >= 4);
 }
 
-module.exports = { norm, aliasesFor, teamMatches, FI_TO_EN };
+const Teams = { norm, aliasesFor, teamMatches, FI_TO_EN };
+if (typeof module !== 'undefined' && module.exports) module.exports = Teams;
+if (typeof window !== 'undefined') window.Teams = Teams;

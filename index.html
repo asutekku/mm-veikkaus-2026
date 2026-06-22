@@ -28,6 +28,7 @@
   <nav class="tabs wrap">
     <button class="tab is-active" data-view="dash">ETUSIVU</button>
     <button class="tab" data-view="matches">OTTELUT</button>
+    <button class="tab" data-view="forecast">ENNUSTE</button>
     <button class="tab" data-view="betting">VEDONLYÖNTI</button>
     <button class="tab" data-view="bonus">BONUKSET</button>
   </nav>
@@ -35,21 +36,28 @@
   <main class="wrap">
     <section id="view-dash" class="view"></section>
     <section id="view-matches" class="view" hidden></section>
+    <section id="view-forecast" class="view" hidden></section>
     <section id="view-betting" class="view" hidden></section>
     <section id="view-bonus" class="view" hidden></section>
   </main>
 
   <footer class="site-footer wrap">
-    <p><b>Pisteytys</b> · 1 piste / oikein veikattu lopputulos (1 / X / 2). Vain päättyneet ottelut lasketaan.</p>
-    <p class="muted">Tulokset & maalintekijät: football-data.org · Voitto-% perustuu perheen konsensusmalliin (Monte Carlo, 8000 simulaatiota).</p>
+    <p><b>Pisteytys</b> · alkulohkon merkki 1 p · välieräjoukkue 5 p · finaalijoukkue 10 p · oikea mestari +10 p · maalikuningas 10 p. Vain päättyneet ottelut lasketaan.</p>
+    <p class="muted">Tulokset, maalintekijät & sarjataulukot: football-data.org · Voitto-% ja ennuste: koko turnauksen Monte Carlo -simulaatio (3000×), joukkueiden vahvuus alkulohkon tuloksista ja perheen veikkauksista.</p>
   </footer>
 
   <script>
-    // Always load the latest app logic so updates never get stuck behind a stale cache.
+    // Always load the latest logic (teams -> sim -> app, in order) so updates
+    // never get stuck behind a stale cache.
     (function () {
-      var s = document.createElement('script');
-      s.src = 'app.js?v=' + Date.now();
-      document.body.appendChild(s);
+      var v = Date.now();
+      function load(src, cb) {
+        var s = document.createElement('script');
+        s.src = src + '?v=' + v;
+        s.onload = cb || null;
+        document.body.appendChild(s);
+      }
+      load('scripts/teams.js', function () { load('sim.js', function () { load('app.js'); }); });
     })();
   </script>
 </body>

@@ -181,6 +181,18 @@ td.odds-win { background: var(--good-bg); color: var(--good); border-radius: 4px
 td.odds-win .odds-n { color: var(--good); opacity: 0.7; }
 .odds-table .col-match { min-width: 168px; background: transparent; }
 
+/* ---------- Probability chips (bonus picks) ---------- */
+.pchips { display: flex; flex-wrap: wrap; gap: 5px; }
+.pchip {
+  font-family: var(--mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 5px;
+  background: var(--bg-2); border: 1px solid var(--line-2); color: var(--ink-2);
+}
+.pchip b { color: var(--ink-2); font-weight: 600; }
+.pchip.mid { border-color: var(--lime-dim); color: var(--ink); }
+.pchip.mid b { color: var(--lime); }
+.pchip.hi { border-color: var(--lime); color: var(--ink); background: rgba(182,255,58,0.08); }
+.pchip.hi b { color: var(--lime); }
+
 /* ---------- Bonus ---------- */
 .bonus-block { margin-bottom: 14px; }
 .bonus-block table { width:100%; border-collapse: collapse; font-size:0.86rem; }
