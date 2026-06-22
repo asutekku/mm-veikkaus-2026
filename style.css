@@ -172,6 +172,15 @@ tr.md-divider td { background: var(--bg-2); font-family: var(--mono); font-size:
 .col-player.hl { background: rgba(182,255,58,0.08); }
 .teams { color: var(--ink); }
 
+/* ---------- Betting ---------- */
+.pl-pos { color: var(--good); }
+.pl-neg { color: var(--bad); }
+.odds-table .num { position: relative; font-weight: 600; }
+.odds-n { display: block; font-size: 0.6rem; color: var(--muted); font-weight: 400; line-height: 1; }
+td.odds-win { background: var(--good-bg); color: var(--good); border-radius: 4px; }
+td.odds-win .odds-n { color: var(--good); opacity: 0.7; }
+.odds-table .col-match { min-width: 168px; background: transparent; }
+
 /* ---------- Bonus ---------- */
 .bonus-block { margin-bottom: 14px; }
 .bonus-block table { width:100%; border-collapse: collapse; font-size:0.86rem; }

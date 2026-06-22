@@ -174,6 +174,58 @@ function tournamentStats() {
   };
 }
 
+/* ----- betting (odds implied by the family's own picks) ----- */
+const STAKE = 10;          // € per match
+const BOOK_MARGIN = 0.94;  // ~6% house edge
+const ODDS_MIN = 1.05, ODDS_MAX = 12;
+
+function matchOdds(m) {
+  const players = state.pred.players;
+  const n = { '1': 0, 'X': 0, '2': 0 };
+  let N = 0;
+  players.forEach(p => { const g = m.guesses[p]; if (g) { n[g]++; N++; } });
+  const odds = {};
+  ['1', 'X', '2'].forEach(o => {
+    const prob = (n[o] + 0.5) / (N + 1.5);          // Laplace-smoothed consensus probability
+    const d = (1 / prob) * BOOK_MARGIN;             // fair odds, shortened by the margin
+    odds[o] = Math.max(ODDS_MIN, Math.min(ODDS_MAX, d));
+  });
+  return { odds, n, N };
+}
+
+function bettingStats() {
+  const players = state.pred.players;
+  const res = resolvedMatches();
+  const stats = {}; players.forEach(p => stats[p] = { net: 0, staked: 0, wins: 0, best: null });
+  const perMatch = [];
+  res.forEach(m => {
+    const r = resultFor(m.idx);
+    const { odds, n, N } = matchOdds(m);
+    perMatch.push({ m, r, odds, n, N });
+    players.forEach(p => {
+      const g = m.guesses[p]; if (!g) return;
+      stats[p].staked += STAKE;
+      if (g === r.outcome) {
+        const profit = STAKE * (odds[g] - 1);
+        stats[p].net += profit; stats[p].wins++;
+        if (!stats[p].best || profit > stats[p].best.profit) stats[p].best = { m, profit, odds: odds[g] };
+      } else {
+        stats[p].net -= STAKE;
+      }
+    });
+  });
+  const rows = players.map(p => ({ name: p, ...stats[p], roi: stats[p].staked ? stats[p].net / stats[p].staked : 0 }))
+    .sort((a, b) => b.net - a.net || a.name.localeCompare(b.name, 'fi'));
+  // biggest longshot that actually hit, across everyone
+  let bigShot = null;
+  perMatch.forEach(pm => {
+    const o = pm.odds[pm.r.outcome];
+    const backers = players.filter(p => pm.m.guesses[p] === pm.r.outcome);
+    if (backers.length && (!bigShot || o > bigShot.odds)) bigShot = { m: pm.m, odds: o, backers };
+  });
+  return { rows, perMatch, resolved: res.length, bigShot };
+}
+
 /* ----- top scorer normalization ----- */
 const SCORER_CANON = [
   { keys: ['mbappe'], name: 'Kylian Mbappé', sur: 'mbappe' },
@@ -446,6 +498,66 @@ function renderMatches() {
     }));
 }
 
+/* ----- betting view ----- */
+const eur = v => (v >= 0 ? '+' : '−') + '€' + Math.abs(v).toFixed(2);
+
+function renderBetting() {
+  const colors = playerColors();
+  const { rows, perMatch, resolved, bigShot } = bettingStats();
+
+  const lead = rows[0], worst = rows[rows.length - 1];
+  const ribbon = `<div class="ribbon" style="border:1px solid var(--line);border-radius:12px;margin-bottom:14px">
+    <div class="cell"><div class="lab">Panos / ottelu</div><div class="val num">€${STAKE}</div></div>
+    <div class="cell"><div class="lab">Otteluita</div><div class="val num">${resolved}</div></div>
+    <div class="cell"><div class="lab">Paras tuotto</div><div class="val num"><b>${esc(lead.name)}</b> <span class="sm">${eur(lead.net)}</span></div></div>
+    <div class="cell"><div class="lab">Suurin tappio</div><div class="val num">${esc(worst.name)} <span class="sm">${eur(worst.net)}</span></div></div>
+    <div class="cell"><div class="lab">Pisin kerroin osui</div><div class="val num">${bigShot ? bigShot.odds.toFixed(2) : '—'} <span class="sm">${bigShot ? esc(bigShot.backers.join(', ')) : ''}</span></div></div>
+  </div>`;
+
+  const lbRows = rows.map((r, i) => {
+    const best = r.best
+      ? `<span class="num">${eur(r.best.profit)}</span> <span class="muted">@${r.best.odds.toFixed(2)} · ${esc(r.best.m.home)}–${esc(r.best.m.away)}</span>`
+      : '<span class="muted">—</span>';
+    return `<tr class="tr-${i + 1}">
+      <td class="l st-rank">${i + 1}</td>
+      <td class="l"><span class="st-name" style="border-left:3px solid ${colors[r.name]};padding-left:7px">${esc(r.name)}</span></td>
+      <td class="st-pts ${r.net >= 0 ? 'pl-pos' : 'pl-neg'}">${eur(r.net)}</td>
+      <td class="num ${r.roi >= 0 ? 'pl-pos' : 'pl-neg'}">${(r.roi * 100).toFixed(1)}%</td>
+      <td class="num muted">€${r.staked}</td>
+      <td class="num muted">${r.wins}/${resolved}</td>
+      <td class="l hide-sm">${best}</td>
+    </tr>`;
+  }).join('');
+
+  const lb = `<div class="panel mb">
+    <div class="panel-h"><h2>Vedonlyönti­liiga</h2><span class="sub">€${STAKE}/ottelu · netto­voitto</span></div>
+    <div class="tbl-scroll"><table class="stand">
+      <thead><tr><th class="l">#</th><th class="l">Pelaaja</th><th>Netto</th><th>ROI</th><th>Panostettu</th><th>Osumat</th><th class="l hide-sm">Paras veto</th></tr></thead>
+      <tbody>${lbRows}</tbody></table></div></div>`;
+
+  // per-match odds table
+  const oddsRows = perMatch.map(pm => {
+    const cell = o => {
+      const win = pm.r.outcome === o;
+      return `<td class="num ${win ? 'odds-win' : ''}">${pm.odds[o].toFixed(2)}<span class="odds-n">${pm.n[o]}</span></td>`;
+    };
+    return `<tr>
+      <td class="l col-match"><span class="teams">${esc(pm.m.home)}</span> – ${esc(pm.m.away)}</td>
+      <td><span class="outcome-pill">${pm.r.outcome}</span> <span class="score">${pm.r.home != null ? pm.r.home + '–' + pm.r.away : ''}</span></td>
+      ${cell('1')}${cell('X')}${cell('2')}
+    </tr>`;
+  }).join('');
+  const oddsTable = `<div class="panel">
+    <div class="panel-h"><h2>Kertoimet otteluittain</h2><span class="sub">1 / X / 2 · pieni luku = veikkaajien määrä</span></div>
+    <div class="tbl-scroll"><table class="stand odds-table">
+      <thead><tr><th class="l">Ottelu</th><th class="l">Tulos</th><th>1</th><th>X</th><th>2</th></tr></thead>
+      <tbody>${oddsRows}</tbody></table></div></div>`;
+
+  document.getElementById('view-betting').innerHTML =
+    `<p class="muted" style="margin-top:0">Jokainen lyö <b>€${STAKE}</b> omalle 1/X/2-veikkaukselleen joka ottelussa. Kertoimet johdetaan <b>perheen omista veikkauksista</b> (mitä useampi veikkasi saman, sitä matalampi kerroin) ~6&nbsp;% marginaalilla — oikeita vedonlyöntikertoimia menneille otteluille ei saa ilmaiseksi. Rohkea oikea veikkaus maksaa eniten.</p>
+     ${ribbon}${lb}${oddsTable}`;
+}
+
 /* ----- bonus ----- */
 function renderBonus() {
   const { players } = state.pred;
@@ -479,7 +591,7 @@ function renderBonus() {
 /* ----- tabs/boot ----- */
 function setView(n) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.view === n));
-  ['dash', 'matches', 'bonus'].forEach(v => document.getElementById('view-' + v).hidden = v !== n);
+  ['dash', 'matches', 'betting', 'bonus'].forEach(v => document.getElementById('view-' + v).hidden = v !== n);
 }
 function fmtUpdated(iso) {
   try { return new Date(iso).toLocaleString('fi-FI', { dateStyle: 'medium', timeStyle: 'short' }); }
@@ -491,7 +603,7 @@ async function boot() {
     const [pred, res] = await Promise.all([loadJSON('data/predictions.json'), loadJSON('data/results.json')]);
     state.pred = pred; state.res = res;
     document.getElementById('updated').textContent = 'Päivitetty ' + fmtUpdated(res.updatedAt);
-    renderDash(); renderMatches(); renderBonus();
+    renderDash(); renderMatches(); renderBetting(); renderBonus();
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
   } catch (e) {
     document.getElementById('updated').textContent = 'Virhe ladattaessa.';
