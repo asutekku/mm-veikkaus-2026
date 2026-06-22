@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-22T17:02:38.335Z",
+  "updatedAt": "2026-06-22T20:49:04.312Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -241,20 +241,26 @@
       "home": 1,
       "away": 3,
       "status": "FINISHED"
+    },
+    "41": {
+      "outcome": "1",
+      "home": 2,
+      "away": 0,
+      "status": "FINISHED"
     }
   },
   "scorers": [
+    {
+      "name": "Lionel Messi",
+      "team": "Argentina",
+      "goals": 5,
+      "assists": 0
+    },
     {
       "name": "Deniz Undav",
       "team": "Germany",
       "goals": 3,
       "assists": 2
-    },
-    {
-      "name": "Lionel Messi",
-      "team": "Argentina",
-      "goals": 3,
-      "assists": 0
     },
     {
       "name": "Jonathan David",
@@ -731,20 +737,20 @@
       "group": "Group J",
       "position": 1,
       "played": 2,
-      "points": 4,
-      "gf": 3,
+      "points": 6,
+      "gf": 5,
       "ga": 0,
-      "gd": 3
+      "gd": 5
     },
     {
       "team": "Austria",
       "group": "Group J",
       "position": 2,
       "played": 2,
-      "points": 4,
+      "points": 3,
       "gf": 3,
-      "ga": 1,
-      "gd": 2
+      "ga": 3,
+      "gd": 0
     },
     {
       "team": "Jordan",
