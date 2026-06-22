@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-22T20:49:04.312Z",
+  "updatedAt": "2026-06-22T22:47:43.898Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -263,6 +263,12 @@
       "assists": 2
     },
     {
+      "name": "Kylian Mbappé",
+      "team": "France",
+      "goals": 3,
+      "assists": 0
+    },
+    {
       "name": "Jonathan David",
       "team": "Canada",
       "goals": 3,
@@ -319,12 +325,6 @@
     {
       "name": "Elijah Just",
       "team": "New Zealand",
-      "goals": 2,
-      "assists": 0
-    },
-    {
-      "name": "Kylian Mbappé",
-      "team": "France",
       "goals": 2,
       "assists": 0
     },
@@ -693,24 +693,24 @@
       "gd": -4
     },
     {
-      "team": "Norway",
+      "team": "France",
       "group": "Group I",
       "position": 1,
-      "played": 1,
-      "points": 3,
+      "played": 2,
+      "points": 6,
       "gf": 4,
       "ga": 1,
       "gd": 3
     },
     {
-      "team": "France",
+      "team": "Norway",
       "group": "Group I",
       "position": 2,
       "played": 1,
       "points": 3,
-      "gf": 3,
+      "gf": 4,
       "ga": 1,
-      "gd": 2
+      "gd": 3
     },
     {
       "team": "Senegal",
@@ -726,11 +726,11 @@
       "team": "Iraq",
       "group": "Group I",
       "position": 4,
-      "played": 1,
+      "played": 2,
       "points": 0,
       "gf": 1,
-      "ga": 4,
-      "gd": -3
+      "ga": 5,
+      "gd": -4
     },
     {
       "team": "Argentina",
