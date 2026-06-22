@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-21T22:15:23.802Z",
+  "updatedAt": "2026-06-22T04:17:50.614Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -229,6 +229,18 @@
       "home": 0,
       "away": 0,
       "status": "FINISHED"
+    },
+    "39": {
+      "outcome": "X",
+      "home": 2,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "40": {
+      "outcome": "2",
+      "home": 1,
+      "away": 3,
+      "status": "FINISHED"
     }
   },
   "scorers": [
@@ -293,6 +305,12 @@
       "assists": 0
     },
     {
+      "name": "Maximiliano Araújo",
+      "team": "Uruguay",
+      "goals": 2,
+      "assists": 1
+    },
+    {
       "name": "Elijah Just",
       "team": "New Zealand",
       "goals": 2,
@@ -343,12 +361,6 @@
     {
       "name": "Ayase Ueda",
       "team": "Japan",
-      "goals": 2,
-      "assists": 1
-    },
-    {
-      "name": "Mikel Oyarzabal",
-      "team": "Spain",
       "goals": 2,
       "assists": 1
     }
