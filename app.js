@@ -1,6 +1,11 @@
 'use strict';
 
-const state = { pred: null, res: null, sel: new Set() };
+const state = {
+  pred: null, res: null, sel: new Set(),
+  proj: null, timeline: null,
+  // forecasts/probabilities hidden by default to preserve the suspense
+  showProb: (() => { try { return localStorage.getItem('mmv_showProb') === '1'; } catch { return false; } })(),
+};
 
 async function loadJSON(p) {
   const r = await fetch(p + '?t=' + Date.now());
@@ -83,10 +88,10 @@ function standings() {
   // win % and projected final total come from the full-tournament simulation
   // (group 1X2 points + bonus points). Falls back to a group-only estimate if
   // the sim hasn't loaded.
-  const proj = state.proj;
+  const proj = state.showProb ? state.proj : null;
   const projBy = {};
   if (proj) proj.playerProj.forEach(p => projBy[p.name] = p);
-  const fallbackWin = proj ? null : winProbabilities(remaining, pts);
+  const fallbackWin = (state.showProb && !proj) ? winProbabilities(remaining, pts) : null;
 
   const rows = players.map(p => {
     const pr = projBy[p];
@@ -100,7 +105,7 @@ function standings() {
       delta: prevRank ? prevRank[p] - nowRank[p] : null,
       projTotal: pr ? pr.expTotal : null,
       expBonus: pr ? pr.expBonus : null,
-      win: pr ? pr.win : (fallbackWin ? fallbackWin[p] : 0),
+      win: pr ? pr.win : (fallbackWin ? fallbackWin[p] : null),
     };
   }).sort((a, b) => a.rank - b.rank || b.pts - a.pts || a.name.localeCompare(b.name, 'fi'));
 
@@ -332,12 +337,62 @@ function renderChart(colors) {
     <div class="legend">${legend}</div>`;
 }
 
+function renderWinChart(colors) {
+  const tl = state.timeline;
+  if (!tl) return '<div class="chart-body muted" style="padding:24px 16px">Lasketaan voittotodennäköisyyksiä…</div>';
+  const { players } = state.pred;
+  const steps = tl.steps;
+  const xmax = steps[steps.length - 1].played || 1;
+  const lastWin = steps[steps.length - 1].win;
+  const lead = players.slice().sort((a, b) => lastWin[b] - lastWin[a])[0];
+  const yMaxRaw = Math.max(0.1, ...steps.flatMap(s => players.map(p => s.win[p])));
+  const yMax = Math.min(1, Math.ceil(yMaxRaw / 0.05) * 0.05);
+
+  const W = 760, H = 260, padL = 30, padR = 12, padT = 12, padB = 18;
+  const X = v => padL + (v / xmax) * (W - padL - padR);
+  const Y = v => padT + (1 - v / yMax) * (H - padT - padB);
+
+  let grid = '';
+  const yStep = yMax <= 0.2 ? 0.05 : 0.1;
+  for (let v = 0; v <= yMax + 1e-9; v += yStep) {
+    grid += `<line class="grid-line" x1="${padL}" y1="${Y(v).toFixed(1)}" x2="${W - padR}" y2="${Y(v).toFixed(1)}"/>`;
+    grid += `<text x="${padL - 5}" y="${(Y(v) + 3).toFixed(1)}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+  }
+  let xlab = '';
+  [0, 24, 48, 72].forEach(b => {
+    if (b <= xmax) {
+      xlab += `<line class="grid-line" x1="${X(b).toFixed(1)}" y1="${padT}" x2="${X(b).toFixed(1)}" y2="${H - padB}" stroke-dasharray="2 3"/>`;
+      if (b > 0) xlab += `<text x="${X(b).toFixed(1)}" y="${H - 5}" text-anchor="middle">K${Math.min(3, b / 24)}</text>`;
+    }
+  });
+  const lines = players.map(p => {
+    const pts = steps.map(s => `${X(s.played).toFixed(1)},${Y(s.win[p]).toFixed(1)}`).join(' ');
+    const cls = 'pline' + (p === lead ? ' lead' : '') + (state.sel.has(p) ? ' sel' : '');
+    return `<polyline class="${cls}" data-p="${esc(p)}" points="${pts}" stroke="${colors[p]}"/>`;
+  }).join('');
+  const legend = players.map(p => ({ p, v: lastWin[p] }))
+    .sort((a, b) => b.v - a.v)
+    .map(({ p, v }) => {
+      const cls = 'lg-chip' + (state.sel.has(p) ? ' sel' : (state.sel.size ? ' dim' : ''));
+      return `<span class="${cls}" data-chip="${esc(p)}"><span class="sw" style="background:${colors[p]}"></span><span class="lp">${esc(p)}</span> ${(v * 100).toFixed(0)}%</span>`;
+    }).join('');
+
+  return `
+    <div class="chart-body chart ${state.sel.size ? 'has-sel' : ''}">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="axis">
+        ${grid}${xlab}${lines}
+      </svg>
+    </div>
+    <div class="legend">${legend}</div>`;
+}
+
 function renderStandingsTable(st, colors) {
+  const showP = state.showProb;
   const head = `<thead><tr>
     <th class="l">#</th><th></th><th class="l">Pelaaja</th>
     <th>Pist</th><th class="l barcell hide-sm">Eteneminen</th>
     <th class="hide-sm">Osuma</th><th class="hide-sm">Viim. 5</th>
-    <th>Voitto-%</th><th>Ennuste</th></tr></thead>`;
+    ${showP ? '<th>Voitto-%</th><th>Ennuste</th>' : ''}</tr></thead>`;
   const max = st.leaderPts || 1;
   const body = st.rows.map(r => {
     const d = r.delta;
@@ -346,10 +401,12 @@ function renderStandingsTable(st, colors) {
       : d < 0 ? `<span class="delta down">▼${-d}</span>`
       : '<span class="delta flat">–</span>';
     const form = r.form.map(f => `<i class="${f}"></i>`).join('') || '<i class="x"></i>';
-    const winPct = r.win >= 0.001 ? (r.win * 100).toFixed(r.win >= 0.1 ? 0 : 1) + '%' : '<0.1%';
+    const winPct = r.win == null ? '…' : r.win >= 0.001 ? (r.win * 100).toFixed(r.win >= 0.1 ? 0 : 1) + '%' : '<0.1%';
     const status = r.projTotal != null
       ? `<span class="num" title="projisoitu lopputulos (alkulohko + bonukset)">~${Math.round(r.projTotal)} p</span>`
-      : (r.rank === 1 ? '<span class="badge live">KÄRJESSÄ</span>' : '<span class="muted">—</span>');
+      : (r.rank === 1 ? '<span class="badge live">KÄRJESSÄ</span>' : '<span class="muted">…</span>');
+    const probCells = showP
+      ? `<td class="winp ${r.win >= 0.15 ? 'hot' : ''}">${winPct}</td><td>${status}</td>` : '';
     return `<tr class="tr-${r.rank}">
       <td class="l st-rank">${r.rank}</td>
       <td>${dCell}</td>
@@ -358,8 +415,7 @@ function renderStandingsTable(st, colors) {
       <td class="l barcell hide-sm"><div class="minibar"><span style="width:${(r.pts / max) * 100}%"></span></div></td>
       <td class="hide-sm num">${Math.round(r.hit * 100)}%</td>
       <td class="hide-sm"><span class="form">${form}</span></td>
-      <td class="winp ${r.win >= 0.15 ? 'hot' : ''}">${winPct}</td>
-      <td>${status}</td>
+      ${probCells}
     </tr>`;
   }).join('');
   return `<div class="tbl-scroll"><table class="stand">${head}<tbody>${body}</tbody></table></div>`;
@@ -421,17 +477,27 @@ function renderInsights(ts, st) {
   </div>`;
 }
 
-function chartCardHTML(colors) {
-  return `<div class="panel-h"><h2>Pisteet kierroksittain</h2><span class="sub">kumulatiivinen · klikkaa nimeä</span></div>${renderChart(colors)}`;
+function chartsHTML(colors) {
+  const pointsPanel = `
+    <div class="panel chart-card mb">
+      <div class="panel-h"><h2>Pisteet kierroksittain</h2><span class="sub">kumulatiivinen · klikkaa nimeä</span></div>
+      ${renderChart(colors)}
+    </div>`;
+  if (!state.showProb) return pointsPanel;
+  const winSub = state.timeline ? state.timeline.steps[state.timeline.steps.length - 1].played + ' ottelua' : '…';
+  return pointsPanel + `
+    <div class="panel chart-card mb">
+      <div class="panel-h"><h2>Voittotodennäköisyys</h2><span class="sub">kehitys · ${winSub} · klikkaa nimeä</span></div>
+      ${renderWinChart(colors)}
+    </div>`;
 }
-function bindChart(colors) {
-  document.querySelectorAll('#chart-card [data-chip], #chart-card [data-p]').forEach(el =>
+function bindCharts(colors) {
+  document.querySelectorAll('#charts [data-chip], #charts [data-p]').forEach(el =>
     el.addEventListener('click', () => {
       const p = el.getAttribute('data-chip') || el.getAttribute('data-p');
       if (state.sel.has(p)) state.sel.delete(p); else state.sel.add(p);
-      const card = document.getElementById('chart-card');
-      card.innerHTML = chartCardHTML(colors);
-      bindChart(colors);
+      document.getElementById('charts').innerHTML = chartsHTML(colors);
+      bindCharts(colors);
     }));
 }
 
@@ -442,9 +508,9 @@ function renderDash() {
   renderRibbon(st, ts);
 
   document.getElementById('view-dash').innerHTML = `
-    <div class="panel chart-card mb" id="chart-card">${chartCardHTML(colors)}</div>
+    <div id="charts">${chartsHTML(colors)}</div>
     <div class="panel mb">
-      <div class="panel-h"><h2>Sarjataulukko</h2><span class="sub">${st.resolved}/${st.total} ottelua · voitto-% = monte carlo</span></div>
+      <div class="panel-h"><h2>Sarjataulukko</h2><span class="sub">${st.resolved}/${st.total} ottelua${state.showProb ? ' · voitto-% = koko turnauksen simulaatio' : ''}</span></div>
       ${renderStandingsTable(st, colors)}
     </div>
     <div class="grid grid-2">
@@ -452,7 +518,7 @@ function renderDash() {
       ${renderInsights(ts, st)}
     </div>`;
 
-  bindChart(colors);
+  bindCharts(colors);
 }
 
 /* ----- matches matrix ----- */
@@ -567,10 +633,21 @@ function renderBetting() {
 /* ----- forecast ----- */
 const pct = v => v == null ? '—' : v < 0.005 ? '<1%' : Math.round(v * 100) + '%';
 
+const revealBox = (title, body) => `<div class="panel"><div class="reveal-box">
+    <div class="big">🙈</div><h2 style="margin:0">${title}</h2>
+    <p>${body}</p>
+    <button class="reveal-btn" onclick="document.getElementById('prob-toggle').click()">👁 Näytä ennusteet</button>
+  </div></div>`;
+
 function renderForecast() {
   const colors = playerColors();
+  if (!state.showProb) {
+    document.getElementById('view-forecast').innerHTML =
+      revealBox('Ennusteet piilotettu', 'Voittotodennäköisyydet, mestari- ja maalikuningasennusteet pidetään piilossa, jottei jännitys katoa. Paina näyttääksesi — valinta muistetaan tällä laitteella.');
+    return;
+  }
   const proj = state.proj;
-  if (!proj) { document.getElementById('view-forecast').innerHTML = '<p class="muted">Ennustetta ei voitu laskea (simulaatiodata puuttuu).</p>'; return; }
+  if (!proj) { document.getElementById('view-forecast').innerHTML = '<p class="muted">Lasketaan ennustetta…</p>'; return; }
 
   const rules = `<div class="panel mb"><div class="panel-h"><h2>Pisteytys</h2><span class="sub">säännöt</span></div>
     <div class="stat-rows">
@@ -615,7 +692,7 @@ function renderForecast() {
 /* ----- bonus ----- */
 function renderBonus() {
   const { players } = state.pred;
-  const pp = state.proj ? state.proj.playerPicks : null;
+  const pp = (state.showProb && state.proj) ? state.proj.playerPicks : null;
   const chip = (name, p) => `<span class="pchip ${p >= 0.4 ? 'hi' : p >= 0.15 ? 'mid' : ''}">${esc(name)}${p != null ? ` <b>${pct(p)}</b>` : ''}</span>`;
 
   const cats = [
@@ -639,13 +716,16 @@ function renderBonus() {
       <table><tbody>${rows}</tbody></table></div>`;
   }).join('');
 
+  const intro = state.showProb
+    ? 'Prosentti = nykyinen todennäköisyys, että veikkaus osuu (simulaatiosta). Tarkat pisteet ratkeavat turnauksen edetessä.'
+    : 'Veikkaukset näkyvissä, todennäköisyydet piilossa. Paina yläreunan 👁-painiketta nähdäksesi osumatodennäköisyydet.';
   document.getElementById('view-bonus').innerHTML =
-    `<p class="muted" style="margin-top:0">Prosentti = nykyinen todennäköisyys, että veikkaus osuu (simulaatiosta). Tarkat pisteet ratkeavat turnauksen edetessä.</p>${blocks}`;
+    `<p class="muted" style="margin-top:0">${intro}</p>${blocks}`;
 }
 
-/* ----- tabs/boot ----- */
+/* ----- tabs / toggle / boot ----- */
 function setView(n) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('is-active', t.dataset.view === n));
+  document.querySelectorAll('.tab[data-view]').forEach(t => t.classList.toggle('is-active', t.dataset.view === n));
   ['dash', 'matches', 'forecast', 'betting', 'bonus'].forEach(v => document.getElementById('view-' + v).hidden = v !== n);
 }
 function fmtUpdated(iso) {
@@ -657,24 +737,49 @@ function renderAll() {
   renderDash(); renderMatches(); renderForecast(); renderBetting(); renderBonus();
 }
 
+// Run the (spoilery) simulation only once probabilities are revealed.
+function computeProjection() {
+  if (state.proj || !(window.Sim && window.Teams && state.res.standings && state.res.standings.length)) {
+    renderAll(); return;
+  }
+  renderAll(); // shows "Lasketaan…" placeholders
+  setTimeout(() => {
+    try {
+      state.proj = window.Sim.project(state.pred, state.res, window.Teams, { sims: 3000 });
+      renderAll();
+      setTimeout(() => {
+        try {
+          state.timeline = window.Sim.winTimeline(state.pred, state.res, window.Teams, { sims: 1200, maxPoints: 24 });
+          renderAll();
+        } catch (e) { console.error('timeline failed', e); }
+      }, 30);
+    } catch (e) { console.error('sim failed', e); }
+  }, 30);
+}
+
+function applyToggleLabel() {
+  const btn = document.getElementById('prob-toggle');
+  btn.textContent = state.showProb ? '🙈 PIILOTA ENNUSTEET' : '👁 NÄYTÄ ENNUSTEET';
+  btn.classList.toggle('on', state.showProb);
+}
+
 async function boot() {
   try {
     const [pred, res] = await Promise.all([loadJSON('data/predictions.json'), loadJSON('data/results.json')]);
     state.pred = pred; state.res = res;
     document.getElementById('updated').textContent = 'Päivitetty ' + fmtUpdated(res.updatedAt);
-    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
+    document.querySelectorAll('.tab[data-view]').forEach(t => t.addEventListener('click', () => setView(t.dataset.view)));
 
-    // First paint without the projection (instant), then run the tournament
-    // simulation and re-render so the win % / forecast appear.
+    applyToggleLabel();
+    document.getElementById('prob-toggle').addEventListener('click', () => {
+      state.showProb = !state.showProb;
+      try { localStorage.setItem('mmv_showProb', state.showProb ? '1' : '0'); } catch { }
+      applyToggleLabel();
+      if (state.showProb) computeProjection(); else renderAll();
+    });
+
     renderAll();
-    if (window.Sim && window.Teams && res.standings && res.standings.length) {
-      setTimeout(() => {
-        try {
-          state.proj = window.Sim.project(state.pred, state.res, window.Teams, { sims: 3000 });
-          renderAll();
-        } catch (e) { console.error('sim failed', e); }
-      }, 30);
-    }
+    if (state.showProb) computeProjection();
   } catch (e) {
     document.getElementById('updated').textContent = 'Virhe ladattaessa.';
     console.error(e);

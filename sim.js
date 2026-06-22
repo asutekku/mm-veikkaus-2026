@@ -86,151 +86,127 @@
     return { teams, tokenSet, tokenOf, extractTokens, byToken: Object.fromEntries(teams.map(t => [t.token, t])) };
   }
 
-  function project(pred, res, T, opts) {
-    opts = opts || {};
-    const SIMS = opts.sims || 3000;
+  // ---- shared model: everything that doesn't depend on which results are "known" ----
+  function prepare(pred, res, T) {
     const idx = buildIndex(res.standings || [], T);
     const { teams, tokenOf, extractTokens, byToken } = idx;
     const players = pred.players;
     const resultFor = i => (res.results || {})[String(i)] || null;
+    const outFromScore = (h, a) => h > a ? '1' : h === a ? 'X' : '2';
 
-    // ---- remaining group matches (token pairs) + player guesses ----
-    const remGroup = [];
+    // all group matches, mapped to tokens, with actual score where known
+    const groupMatches = [];
+    const groupGamesByTeam = {}; teams.forEach(t => groupGamesByTeam[t.token] = []);
     pred.matches.forEach(m => {
-      const r = resultFor(m.idx);
-      if (r && r.outcome) return; // already played
       const h = tokenOf(m.home), a = tokenOf(m.away);
       if (!h || !a) return;
-      remGroup.push({ idx: m.idx, h, a, guesses: m.guesses });
+      const r = resultFor(m.idx);
+      let actual = null;
+      if (r && r.outcome) {
+        let gh = r.home, ga = r.away;
+        if (gh == null) { gh = r.outcome === '1' ? 1 : 0; ga = r.outcome === '2' ? 1 : 0; } // synth if no score
+        actual = { out: r.outcome, gh, ga };
+      }
+      const byOut = { '1': [], 'X': [], '2': [] };
+      players.forEach((p, pi) => { const g = m.guesses[p]; if (g === '1' || g === 'X' || g === '2') byOut[g].push(pi); });
+      groupMatches.push({ idx: m.idx, h, a, actual, byOut });
+      groupGamesByTeam[h].push(m.idx); groupGamesByTeam[a].push(m.idx);
     });
 
-    // ---- current group points per player (already-played group games) ----
-    const curPts = {}; players.forEach(p => curPts[p] = 0);
-    pred.matches.forEach(m => {
-      const r = resultFor(m.idx); if (!r || !r.outcome) return;
-      players.forEach(p => { if (m.guesses[p] === r.outcome) curPts[p]++; });
-    });
-
-    // ---- bonus picks -> tokens, and the family-bet prior per team ----
+    // bonus picks -> tokens + family-bet prior
     const bRow = k => (pred.bonus.find(b => b.key === k) || { picks: {} }).picks;
     const sfRow = bRow('semifinal'), fiRow = bRow('final'), chRow = bRow('champion'), tsRow = bRow('topscorer');
-    const pick = {}; // player -> {sf:Set, fin:Set, champ:token, ts:name}
+    const pick = {};
     const prior = {}; teams.forEach(t => prior[t.token] = 0);
     players.forEach(p => {
-      const sf = extractTokens(sfRow[p]);
-      const fin = extractTokens(fiRow[p]);
-      const champArr = extractTokens(chRow[p]);
-      const champ = champArr[0] || null;
+      const sf = extractTokens(sfRow[p]), fin = extractTokens(fiRow[p]);
+      const champ = extractTokens(chRow[p])[0] || null;
       pick[p] = { sf: new Set(sf), fin: new Set(fin), champ, ts: (tsRow[p] || '').trim() };
-      sf.forEach(t => prior[t] += 1);
-      fin.forEach(t => prior[t] += 2);
-      if (champ) prior[champ] += 3;
+      sf.forEach(t => prior[t] += 1); fin.forEach(t => prior[t] += 2); if (champ) prior[champ] += 3;
     });
 
-    // ---- ratings: blend group performance with the family-bet prior ----
-    const perf = {}; teams.forEach(t => {
-      const pl = Math.max(1, t.played);
-      perf[t.token] = (t.pts / pl) + 0.30 * ((t.gf - t.ga) / pl); // ~[-?, 4.2]
-    });
+    // ratings: group performance blended with the family-bet prior
+    const perf = {}; teams.forEach(t => { const pl = Math.max(1, t.played); perf[t.token] = (t.pts / pl) + 0.30 * ((t.gf - t.ga) / pl); });
     const pv = Object.values(perf), pmin = Math.min(...pv), pmax = Math.max(...pv);
     const prMax = Math.max(1, ...Object.values(prior));
     const rating = {};
     teams.forEach(t => {
       const pn = pmax > pmin ? (perf[t.token] - pmin) / (pmax - pmin) : 0.5;
-      const rn = prior[t.token] / prMax;
-      rating[t.token] = 0.55 * pn + 0.45 * rn; // 0..1
+      rating[t.token] = 0.55 * pn + 0.45 * (prior[t.token] / prMax);
     });
 
-    // ---- group membership ----
-    const groups = {};
-    teams.forEach(t => { (groups[t.group] = groups[t.group] || []).push(t.token); });
+    const groups = {}; teams.forEach(t => { (groups[t.group] = groups[t.group] || []).push(t.token); });
 
-    // ---- top-scorer candidates ----
+    // top-scorer candidates
     const deburr = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     const apiScorers = res.scorers || [];
-    const candMap = {}; // key -> {name, teamTok, goals, rate}
-    function addCand(name, teamName, goals, played) {
-      if (!name) return;
-      const key = deburr(name).split(/\s+/).pop();
+    const candMap = {};
+    const addCand = (name, teamName, goals, played) => {
+      if (!name) return; const key = deburr(name).split(/\s+/).pop();
       if (!candMap[key]) candMap[key] = { name, teamTok: tokenOf(teamName), goals: goals || 0, played: played || 2 };
-    }
+    };
     apiScorers.forEach(s => addCand(s.name, s.team, s.goals, 2));
-    // family-picked scorers: match to an API scorer if possible, else add as longshot
     players.forEach(p => {
       const raw = (tsRow[p] || '').trim(); if (!raw) return;
       const sur = deburr(raw).replace(/[^a-z ]/g, ' ').trim().split(/\s+/).pop();
-      const found = apiScorers.find(s => deburr(s.name).includes(sur) && sur.length >= 3);
-      if (found) return; // already a candidate
-      addCand(raw, null, 0, 2);
+      if (!apiScorers.find(s => deburr(s.name).includes(sur) && sur.length >= 3)) addCand(raw, null, 0, 2);
     });
     const cands = Object.values(candMap);
-    // map each player's top-scorer pick to a candidate key for scoring
     const playerTsKey = {};
     players.forEach(p => {
       const raw = (tsRow[p] || '').trim();
       const sur = deburr(raw).replace(/[^a-z ]/g, ' ').trim().split(/\s+/).pop();
-      const c = cands.find(c => deburr(c.name).split(/\s+/).pop() === sur || deburr(c.name).includes(sur) && sur.length >= 3);
+      const c = cands.find(c => deburr(c.name).split(/\s+/).pop() === sur || (deburr(c.name).includes(sur) && sur.length >= 3));
       playerTsKey[p] = c ? c.name : null;
     });
 
-    // remaining group games per team (for top-scorer minutes)
-    const remGamesTeam = {}; teams.forEach(t => remGamesTeam[t.token] = 0);
-    remGroup.forEach(m => { remGamesTeam[m.h]++; remGamesTeam[m.a]++; });
-
-    // ---- match model ----
     const BASE = 1.35, K = 1.0;
-    function playScore(ra, rb) {
-      const la = BASE * Math.exp(K * (ra - rb)), lb = BASE * Math.exp(K * (rb - ra));
-      return [poisson(la), poisson(lb)];
-    }
+    const playScore = (ra, rb) => [poisson(BASE * Math.exp(K * (ra - rb))), poisson(BASE * Math.exp(K * (rb - ra)))];
 
-    // ---- accumulators ----
+    return { idx, teams, byToken, players, groupMatches, groupGamesByTeam, pick, prior, rating, groups, cands, playerTsKey, playScore, outFromScore, resolvedIdx: groupMatches.filter(m => m.actual).map(m => m.idx) };
+  }
+
+  // ---- core Monte Carlo: simulate the rest of the tournament N times.
+  // `knownSet` = group-match idx whose ACTUAL result is used; all others are simulated. ----
+  function runSims(M, knownSet, N) {
+    const { teams, byToken, players, groupMatches, groupGamesByTeam, pick, rating, groups, cands, playerTsKey, playScore, outFromScore } = M;
+    const NP = players.length;
+    const futureGG = {}; teams.forEach(t => futureGG[t.token] = groupGamesByTeam[t.token].filter(i => !knownSet.has(i)).length);
+
     const pSF = {}, pFin = {}, pCh = {}; teams.forEach(t => { pSF[t.token] = pFin[t.token] = pCh[t.token] = 0; });
     const tsWin = {}; cands.forEach(c => tsWin[c.name] = 0);
-    const wins = {}, expTot = {}, expBon = {}; players.forEach(p => { wins[p] = 0; expTot[p] = 0; expBon[p] = 0; });
-
+    const wins = new Array(NP).fill(0), expTot = new Array(NP).fill(0), expBon = new Array(NP).fill(0);
+    const groupKeys = Object.keys(groups);
     const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
 
-    for (let s = 0; s < SIMS; s++) {
-      // group tables start from current standings
-      const tab = {}; teams.forEach(t => tab[t.token] = { pts: t.pts, gf: t.gf, ga: t.ga });
-      const gOut = {}; players.forEach(p => gOut[p] = 0);
-      const teamGames = {}; teams.forEach(t => teamGames[t.token] = t.played); // games played count this sim
+    for (let s = 0; s < N; s++) {
+      const tab = {}; teams.forEach(t => tab[t.token] = { pts: 0, gf: 0, ga: 0 });
+      const gOut = new Array(NP).fill(0);
+      const koGames = {}; teams.forEach(t => koGames[t.token] = 0);
 
-      // simulate remaining group games
-      for (const m of remGroup) {
-        const [gh, ga] = playScore(rating[m.h], rating[m.a]);
-        tab[m.h].pts += gh > ga ? 3 : gh === ga ? 1 : 0;
-        tab[m.a].pts += ga > gh ? 3 : gh === ga ? 1 : 0;
-        tab[m.h].gf += gh; tab[m.h].ga += ga; tab[m.a].gf += ga; tab[m.a].ga += gh;
-        teamGames[m.h]++; teamGames[m.a]++;
-        const out = gh > ga ? '1' : gh === ga ? 'X' : '2';
-        for (const p of players) if (m.guesses[p] === out) gOut[p]++;
+      for (const m of groupMatches) {
+        let gh, ga, out;
+        if (knownSet.has(m.idx) && m.actual) { gh = m.actual.gh; ga = m.actual.ga; out = m.actual.out; }
+        else { [gh, ga] = playScore(rating[m.h], rating[m.a]); out = outFromScore(gh, ga); }
+        const th = tab[m.h], ta = tab[m.a];
+        th.pts += gh > ga ? 3 : gh === ga ? 1 : 0; ta.pts += ga > gh ? 3 : gh === ga ? 1 : 0;
+        th.gf += gh; th.ga += ga; ta.gf += ga; ta.ga += gh;
+        const arr = m.byOut[out]; for (let k = 0; k < arr.length; k++) gOut[arr[k]]++;
       }
 
-      // rank groups -> qualifiers
       const cmp = (x, y) => tab[y].pts - tab[x].pts || (tab[y].gf - tab[y].ga) - (tab[x].gf - tab[x].ga) || tab[y].gf - tab[x].gf || (Math.random() - 0.5);
-      const qualified = []; const thirds = [];
-      for (const g of Object.keys(groups)) {
-        const sorted = groups[g].slice().sort(cmp);
-        qualified.push(sorted[0], sorted[1]);
-        if (sorted[2]) thirds.push(sorted[2]);
-      }
+      const qualified = [], thirds = [];
+      for (const g of groupKeys) { const sorted = groups[g].slice().sort(cmp); qualified.push(sorted[0], sorted[1]); if (sorted[2]) thirds.push(sorted[2]); }
       thirds.sort(cmp);
       for (let i = 0; i < 8 && i < thirds.length; i++) qualified.push(thirds[i]);
 
-      // knockout: random pairing each round
-      let alive = shuffle(qualified.slice());
-      let sfTeams = null, finTeams = null, champ = null;
+      let alive = shuffle(qualified.slice()), sfTeams = null, finTeams = null, champ = null;
       while (alive.length > 1) {
         const next = [];
         for (let i = 0; i + 1 < alive.length; i += 2) {
           const A = alive[i], B = alive[i + 1];
-          let [ga, gb] = playScore(rating[A], rating[B]);
-          teamGames[A]++; teamGames[B]++;
-          let w;
-          if (ga > gb) w = A; else if (gb > ga) w = B; else w = Math.random() < sigmoid(3 * (rating[A] - rating[B])) ? A : B;
-          next.push(w);
+          const [ga, gb] = playScore(rating[A], rating[B]); koGames[A]++; koGames[B]++;
+          next.push(ga > gb ? A : gb > ga ? B : (Math.random() < sigmoid(3 * (rating[A] - rating[B])) ? A : B));
         }
         if (next.length === 4) sfTeams = next.slice();
         if (next.length === 2) finTeams = next.slice();
@@ -240,55 +216,56 @@
       const sfSet = new Set(sfTeams || []), finSet = new Set(finTeams || []);
       sfSet.forEach(t => pSF[t]++); finSet.forEach(t => pFin[t]++); if (champ) pCh[champ]++;
 
-      // top-scorer race
       let boot = null, bootGoals = -1;
       for (const c of cands) {
-        const rg = (c.teamTok ? remGamesTeam[c.teamTok] : 1); // remaining group games
-        const koG = c.teamTok ? Math.max(0, teamGames[c.teamTok] - (byToken[c.teamTok] ? byToken[c.teamTok].played + rg : 0)) : 0;
-        const games = rg + koG;
+        const games = (c.teamTok ? futureGG[c.teamTok] + koGames[c.teamTok] : 1);
         const rate = (c.goals / Math.max(2, c.played)) || 0.15;
         const total = c.goals + poisson(Math.max(0.05, rate * games));
         if (total > bootGoals) { bootGoals = total; boot = c.name; }
       }
       if (boot) tsWin[boot]++;
 
-      // player totals this sim
-      let best = -1, bestPlayers = [];
-      for (const p of players) {
-        const pk = pick[p];
+      let best = -1, ties = [];
+      for (let pi = 0; pi < NP; pi++) {
+        const pk = pick[players[pi]];
         let bonus = 0;
         sfSet.forEach(t => { if (pk.sf.has(t)) bonus += 5; });
         finSet.forEach(t => { if (pk.fin.has(t)) bonus += 10; });
         if (pk.champ && pk.champ === champ) bonus += 10;
-        if (playerTsKey[p] && playerTsKey[p] === boot) bonus += 10;
-        const total = curPts[p] + gOut[p] + bonus;
-        expTot[p] += total; expBon[p] += bonus;
-        if (total > best) { best = total; bestPlayers = [p]; }
-        else if (total === best) bestPlayers.push(p);
+        if (playerTsKey[players[pi]] && playerTsKey[players[pi]] === boot) bonus += 10;
+        const total = gOut[pi] + bonus;
+        expTot[pi] += total; expBon[pi] += bonus;
+        if (total > best) { best = total; ties = [pi]; } else if (total === best) ties.push(pi);
       }
-      const share = 1 / bestPlayers.length;
-      bestPlayers.forEach(p => wins[p] += share);
+      const share = 1 / ties.length;
+      for (const pi of ties) wins[pi] += share;
     }
+    return { wins, expTot, expBon, pSF, pFin, pCh, tsWin, N };
+  }
 
-    // ---- assemble output ----
-    const teamProb = teams.map(t => ({
-      name: t.name, group: t.group, rating: rating[t.token],
-      sf: pSF[t.token] / SIMS, fin: pFin[t.token] / SIMS, champ: pCh[t.token] / SIMS,
-    })).sort((a, b) => b.champ - a.champ || b.fin - a.fin);
+  function project(pred, res, T, opts) {
+    opts = opts || {};
+    const SIMS = opts.sims || 3000;
+    const M = prepare(pred, res, T);
+    const { teams, byToken, players, pick, rating, cands, playerTsKey, groupMatches } = M;
+    const knownSet = new Set(M.resolvedIdx);
+    const r = runSims(M, knownSet, SIMS);
 
-    const topscorers = cands.map(c => ({ name: c.name, goals: c.goals, p: tsWin[c.name] / SIMS }))
-      .sort((a, b) => b.p - a.p);
+    // current (locked) group points per player
+    const curGroup = {}; players.forEach(p => curGroup[p] = 0);
+    groupMatches.forEach(m => { if (m.actual) m.byOut[m.actual.out].forEach(pi => curGroup[players[pi]]++); });
 
-    const playerProj = players.map(p => ({
-      name: p, curGroup: curPts[p], expTotal: expTot[p] / SIMS, expBonus: expBon[p] / SIMS, win: wins[p] / SIMS,
-    })).sort((a, b) => b.win - a.win || b.expTotal - a.expTotal);
+    const teamProb = teams.map(t => ({ name: t.name, group: t.group, rating: rating[t.token], sf: r.pSF[t.token] / SIMS, fin: r.pFin[t.token] / SIMS, champ: r.pCh[t.token] / SIMS }))
+      .sort((a, b) => b.champ - a.champ || b.fin - a.fin);
+    const topscorers = cands.map(c => ({ name: c.name, goals: c.goals, p: r.tsWin[c.name] / SIMS })).sort((a, b) => b.p - a.p);
+    const playerProj = players.map((p, pi) => ({ name: p, curGroup: curGroup[p], expTotal: r.expTot[pi] / SIMS, expBonus: r.expBon[pi] / SIMS, win: r.wins[pi] / SIMS }))
+      .sort((a, b) => b.win - a.win || b.expTotal - a.expTotal);
 
-    // per-player annotated picks (with probabilities) for the bonus view
-    const probOf = {}; teams.forEach(t => probOf[t.token] = { sf: pSF[t.token] / SIMS, fin: pFin[t.token] / SIMS, champ: pCh[t.token] / SIMS });
+    const probOf = {}; teams.forEach(t => probOf[t.token] = { sf: r.pSF[t.token] / SIMS, fin: r.pFin[t.token] / SIMS, champ: r.pCh[t.token] / SIMS });
     const tsProb = {}; topscorers.forEach(t => tsProb[t.name] = t.p);
     const playerPicks = {};
     players.forEach(p => {
-      const annot = tok => ({ name: (byToken[tok] || {}).name || tok, p: (probOf[tok] || {}) });
+      const annot = tok => ({ name: (byToken[tok] || {}).name || tok });
       playerPicks[p] = {
         sf: [...pick[p].sf].map(t => ({ ...annot(t), p: probOf[t] ? probOf[t].sf : 0 })),
         fin: [...pick[p].fin].map(t => ({ ...annot(t), p: probOf[t] ? probOf[t].fin : 0 })),
@@ -296,11 +273,40 @@
         ts: pick[p].ts ? { name: pick[p].ts, p: (playerTsKey[p] && tsProb[playerTsKey[p]]) || 0 } : null,
       };
     });
-
     return { sims: SIMS, teamProb, topscorers, playerProj, playerPicks };
   }
 
-  const Sim = { project, buildIndex };
+  // ---- win-probability over time: recompute win% at each point in history,
+  // treating later results as not-yet-known at that point. ----
+  function winTimeline(pred, res, T, opts) {
+    opts = opts || {};
+    const N = opts.sims || 600;
+    const maxPts = opts.maxPoints || 30;
+    const M = prepare(pred, res, T);
+    const { players } = M;
+    const chrono = M.resolvedIdx.slice().sort((a, b) => a - b);
+    const R = chrono.length;
+
+    // checkpoints = matches-played counts 0..R, subsampled to <= maxPts (always include 0 and R)
+    let counts;
+    if (R + 1 <= maxPts) counts = Array.from({ length: R + 1 }, (_, i) => i);
+    else {
+      counts = [];
+      for (let i = 0; i < maxPts - 1; i++) counts.push(Math.round(i * R / (maxPts - 1)));
+      counts.push(R);
+      counts = [...new Set(counts)];
+    }
+
+    const steps = counts.map(s => {
+      const knownSet = new Set(chrono.slice(0, s));
+      const r = runSims(M, knownSet, N);
+      const win = {}; players.forEach((p, pi) => win[p] = r.wins[pi] / N);
+      return { played: s, win };
+    });
+    return { players, steps, total: pred.matches.length };
+  }
+
+  const Sim = { project, winTimeline, prepare, runSims, buildIndex };
   if (typeof module !== 'undefined' && module.exports) module.exports = Sim;
   if (typeof root !== 'undefined') root.Sim = Sim;
 })(typeof window !== 'undefined' ? window : this);
