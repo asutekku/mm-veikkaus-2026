@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-23T14:49:40.235Z",
+  "updatedAt": "2026-06-23T17:17:54.115Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -801,19 +801,19 @@
       "gd": 2
     },
     {
-      "team": "Congo DR",
+      "team": "Portugal",
       "group": "Group K",
       "position": 2,
-      "played": 1,
-      "points": 1,
+      "played": 2,
+      "points": 2,
       "gf": 1,
       "ga": 1,
       "gd": 0
     },
     {
-      "team": "Portugal",
+      "team": "Congo DR",
       "group": "Group K",
-      "position": 2,
+      "position": 3,
       "played": 1,
       "points": 1,
       "gf": 1,
@@ -824,8 +824,8 @@
       "team": "Uzbekistan",
       "group": "Group K",
       "position": 4,
-      "played": 1,
-      "points": 0,
+      "played": 2,
+      "points": 1,
       "gf": 1,
       "ga": 3,
       "gd": -2
