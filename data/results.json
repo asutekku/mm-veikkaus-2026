@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-23T17:17:54.115Z",
+  "updatedAt": "2026-06-23T20:06:22.276Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -265,6 +265,12 @@
       "home": 1,
       "away": 2,
       "status": "FINISHED"
+    },
+    "45": {
+      "outcome": "1",
+      "home": 5,
+      "away": 0,
+      "status": "FINISHED"
     }
   },
   "scorers": [
@@ -320,7 +326,7 @@
       "name": "Vinicius Junior",
       "team": "Brazil",
       "goals": 2,
-      "assists": 2
+      "assists": 1
     },
     {
       "name": "Kai Havertz",
@@ -791,24 +797,24 @@
       "gd": -3
     },
     {
-      "team": "Colombia",
+      "team": "Portugal",
       "group": "Group K",
       "position": 1,
+      "played": 2,
+      "points": 4,
+      "gf": 6,
+      "ga": 1,
+      "gd": 5
+    },
+    {
+      "team": "Colombia",
+      "group": "Group K",
+      "position": 2,
       "played": 1,
       "points": 3,
       "gf": 3,
       "ga": 1,
       "gd": 2
-    },
-    {
-      "team": "Portugal",
-      "group": "Group K",
-      "position": 2,
-      "played": 2,
-      "points": 2,
-      "gf": 1,
-      "ga": 1,
-      "gd": 0
     },
     {
       "team": "Congo DR",
@@ -825,17 +831,17 @@
       "group": "Group K",
       "position": 4,
       "played": 2,
-      "points": 1,
+      "points": 0,
       "gf": 1,
-      "ga": 3,
-      "gd": -2
+      "ga": 8,
+      "gd": -7
     },
     {
       "team": "England",
       "group": "Group L",
       "position": 1,
-      "played": 1,
-      "points": 3,
+      "played": 2,
+      "points": 4,
       "gf": 4,
       "ga": 2,
       "gd": 2
@@ -844,8 +850,8 @@
       "team": "Ghana",
       "group": "Group L",
       "position": 2,
-      "played": 1,
-      "points": 3,
+      "played": 2,
+      "points": 4,
       "gf": 1,
       "ga": 0,
       "gd": 1
