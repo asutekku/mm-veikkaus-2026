@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-23T03:36:36.685Z",
+  "updatedAt": "2026-06-23T09:39:53.765Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -257,6 +257,12 @@
     "43": {
       "outcome": "1",
       "home": 3,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "44": {
+      "outcome": "2",
+      "home": 1,
       "away": 2,
       "status": "FINISHED"
     }
@@ -765,23 +771,23 @@
       "gd": 0
     },
     {
-      "team": "Jordan",
+      "team": "Algeria",
       "group": "Group J",
       "position": 3,
       "played": 2,
-      "points": 1,
-      "gf": 1,
-      "ga": 3,
+      "points": 3,
+      "gf": 2,
+      "ga": 4,
       "gd": -2
     },
     {
-      "team": "Algeria",
+      "team": "Jordan",
       "group": "Group J",
       "position": 4,
       "played": 2,
-      "points": 1,
-      "gf": 0,
-      "ga": 3,
+      "points": 0,
+      "gf": 2,
+      "ga": 5,
       "gd": -3
     },
     {
