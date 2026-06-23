@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-23T09:39:53.765Z",
+  "updatedAt": "2026-06-23T14:49:40.235Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -329,6 +329,12 @@
       "assists": 0
     },
     {
+      "name": "Crysencio Summerville",
+      "team": "Netherlands",
+      "goals": 2,
+      "assists": 1
+    },
+    {
       "name": "Daichi Kamada",
       "team": "Japan",
       "goals": 2,
@@ -379,12 +385,6 @@
     {
       "name": "Cody Gakpo",
       "team": "Netherlands",
-      "goals": 2,
-      "assists": 2
-    },
-    {
-      "name": "Ayase Ueda",
-      "team": "Japan",
       "goals": 2,
       "assists": 1
     }
