@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-23T22:13:46.298Z",
+  "updatedAt": "2026-06-24T03:37:18.696Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -277,6 +277,12 @@
       "home": 0,
       "away": 0,
       "status": "FINISHED"
+    },
+    "47": {
+      "outcome": "2",
+      "home": 0,
+      "away": 1,
+      "status": "FINISHED"
     }
   },
   "scorers": [
@@ -377,6 +383,12 @@
       "assists": 0
     },
     {
+      "name": "Daniel Muñoz",
+      "team": "Colombia",
+      "goals": 2,
+      "assists": 0
+    },
+    {
       "name": "Johan Manzambi",
       "team": "Switzerland",
       "goals": 2,
@@ -393,12 +405,6 @@
       "team": "Netherlands",
       "goals": 2,
       "assists": 0
-    },
-    {
-      "name": "Cody Gakpo",
-      "team": "Netherlands",
-      "goals": 2,
-      "assists": 1
     }
   ],
   "standings": [
@@ -816,8 +822,8 @@
       "team": "Colombia",
       "group": "Group K",
       "position": 2,
-      "played": 1,
-      "points": 3,
+      "played": 2,
+      "points": 4,
       "gf": 3,
       "ga": 1,
       "gd": 2
@@ -826,8 +832,8 @@
       "team": "Congo DR",
       "group": "Group K",
       "position": 3,
-      "played": 1,
-      "points": 1,
+      "played": 2,
+      "points": 2,
       "gf": 1,
       "ga": 1,
       "gd": 0
@@ -863,23 +869,23 @@
       "gd": 1
     },
     {
-      "team": "Panama",
+      "team": "Croatia",
       "group": "Group L",
       "position": 3,
-      "played": 1,
-      "points": 0,
-      "gf": 0,
-      "ga": 1,
+      "played": 2,
+      "points": 3,
+      "gf": 3,
+      "ga": 4,
       "gd": -1
     },
     {
-      "team": "Croatia",
+      "team": "Panama",
       "group": "Group L",
       "position": 4,
-      "played": 1,
+      "played": 2,
       "points": 0,
-      "gf": 2,
-      "ga": 4,
+      "gf": 0,
+      "ga": 2,
       "gd": -2
     }
   ]
