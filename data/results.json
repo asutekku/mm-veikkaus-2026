@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-24T03:37:18.696Z",
+  "updatedAt": "2026-06-24T09:30:51.162Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -282,6 +282,12 @@
       "outcome": "2",
       "home": 0,
       "away": 1,
+      "status": "FINISHED"
+    },
+    "48": {
+      "outcome": "1",
+      "home": 1,
+      "away": 0,
       "status": "FINISHED"
     }
   },
@@ -809,9 +815,19 @@
       "gd": -3
     },
     {
-      "team": "Portugal",
+      "team": "Colombia",
       "group": "Group K",
       "position": 1,
+      "played": 2,
+      "points": 6,
+      "gf": 4,
+      "ga": 1,
+      "gd": 3
+    },
+    {
+      "team": "Portugal",
+      "group": "Group K",
+      "position": 2,
       "played": 2,
       "points": 4,
       "gf": 6,
@@ -819,24 +835,14 @@
       "gd": 5
     },
     {
-      "team": "Colombia",
-      "group": "Group K",
-      "position": 2,
-      "played": 2,
-      "points": 4,
-      "gf": 3,
-      "ga": 1,
-      "gd": 2
-    },
-    {
       "team": "Congo DR",
       "group": "Group K",
       "position": 3,
       "played": 2,
-      "points": 2,
+      "points": 1,
       "gf": 1,
-      "ga": 1,
-      "gd": 0
+      "ga": 2,
+      "gd": -1
     },
     {
       "team": "Uzbekistan",
