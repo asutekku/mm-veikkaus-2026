@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-24T17:05:04.520Z",
+  "updatedAt": "2026-06-24T19:46:33.739Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -458,8 +458,8 @@
       "team": "Canada",
       "group": "Group B",
       "position": 1,
-      "played": 2,
-      "points": 4,
+      "played": 3,
+      "points": 5,
       "gf": 7,
       "ga": 1,
       "gd": 6
@@ -468,8 +468,8 @@
       "team": "Switzerland",
       "group": "Group B",
       "position": 2,
-      "played": 2,
-      "points": 4,
+      "played": 3,
+      "points": 5,
       "gf": 5,
       "ga": 2,
       "gd": 3
@@ -478,21 +478,21 @@
       "team": "Bosnia-Herzegovina",
       "group": "Group B",
       "position": 3,
-      "played": 2,
-      "points": 1,
-      "gf": 2,
+      "played": 3,
+      "points": 4,
+      "gf": 3,
       "ga": 5,
-      "gd": -3
+      "gd": -2
     },
     {
       "team": "Qatar",
       "group": "Group B",
       "position": 4,
-      "played": 2,
+      "played": 3,
       "points": 1,
       "gf": 1,
-      "ga": 7,
-      "gd": -6
+      "ga": 8,
+      "gd": -7
     },
     {
       "team": "Brazil",
