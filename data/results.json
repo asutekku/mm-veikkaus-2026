@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-24T22:18:17.559Z",
+  "updatedAt": "2026-06-25T03:36:06.025Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -301,6 +301,30 @@
       "home": 3,
       "away": 1,
       "status": "FINISHED"
+    },
+    "51": {
+      "outcome": "1",
+      "home": 4,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "52": {
+      "outcome": "2",
+      "home": 0,
+      "away": 3,
+      "status": "FINISHED"
+    },
+    "53": {
+      "outcome": "2",
+      "home": 0,
+      "away": 3,
+      "status": "FINISHED"
+    },
+    "54": {
+      "outcome": "1",
+      "home": 1,
+      "away": 0,
+      "status": "FINISHED"
     }
   },
   "scorers": [
@@ -309,6 +333,12 @@
       "team": "Argentina",
       "goals": 5,
       "assists": 0
+    },
+    {
+      "name": "Vinicius Junior",
+      "team": "Brazil",
+      "goals": 4,
+      "assists": 1
     },
     {
       "name": "Kylian Mbappé",
@@ -323,10 +353,10 @@
       "assists": 0
     },
     {
-      "name": "Vinicius Junior",
-      "team": "Brazil",
+      "name": "Ismael Saibari",
+      "team": "Morocco",
       "goals": 3,
-      "assists": 1
+      "assists": 0
     },
     {
       "name": "Deniz Undav",
@@ -347,6 +377,18 @@
       "assists": 0
     },
     {
+      "name": "Matheus Cunha",
+      "team": "Brazil",
+      "goals": 3,
+      "assists": 0
+    },
+    {
+      "name": "Julián Quiñones",
+      "team": "Mexico",
+      "goals": 2,
+      "assists": 0
+    },
+    {
       "name": "Cyle Larin",
       "team": "Canada",
       "goals": 2,
@@ -355,12 +397,6 @@
     {
       "name": "Folarin Balogun",
       "team": "United States",
-      "goals": 2,
-      "assists": 0
-    },
-    {
-      "name": "Ismael Saibari",
-      "team": "Morocco",
       "goals": 2,
       "assists": 0
     },
@@ -411,18 +447,6 @@
       "team": "Colombia",
       "goals": 2,
       "assists": 0
-    },
-    {
-      "name": "Ruben Vargas",
-      "team": "Switzerland",
-      "goals": 2,
-      "assists": 1
-    },
-    {
-      "name": "Ermin Mahmic",
-      "team": "Bosnia-Herzegovina",
-      "goals": 2,
-      "assists": 0
     }
   ],
   "standings": [
@@ -430,41 +454,41 @@
       "team": "Mexico",
       "group": "Group A",
       "position": 1,
-      "played": 2,
-      "points": 6,
-      "gf": 3,
+      "played": 3,
+      "points": 9,
+      "gf": 6,
       "ga": 0,
-      "gd": 3
+      "gd": 6
     },
     {
-      "team": "South Korea",
+      "team": "South Africa",
       "group": "Group A",
       "position": 2,
-      "played": 2,
-      "points": 3,
-      "gf": 2,
-      "ga": 2,
-      "gd": 0
-    },
-    {
-      "team": "Czechia",
-      "group": "Group A",
-      "position": 3,
-      "played": 2,
-      "points": 1,
+      "played": 3,
+      "points": 4,
       "gf": 2,
       "ga": 3,
       "gd": -1
     },
     {
-      "team": "South Africa",
+      "team": "South Korea",
+      "group": "Group A",
+      "position": 3,
+      "played": 3,
+      "points": 3,
+      "gf": 2,
+      "ga": 3,
+      "gd": -1
+    },
+    {
+      "team": "Czechia",
       "group": "Group A",
       "position": 4,
-      "played": 2,
+      "played": 3,
       "points": 1,
-      "gf": 1,
-      "ga": 3,
-      "gd": -2
+      "gf": 2,
+      "ga": 6,
+      "gd": -4
     },
     {
       "team": "Switzerland",
@@ -511,40 +535,40 @@
       "group": "Group C",
       "position": 1,
       "played": 3,
-      "points": 5,
-      "gf": 4,
+      "points": 7,
+      "gf": 7,
       "ga": 1,
-      "gd": 3
+      "gd": 6
     },
     {
       "team": "Morocco",
       "group": "Group C",
       "position": 2,
       "played": 3,
-      "points": 5,
-      "gf": 2,
-      "ga": 1,
-      "gd": 1
+      "points": 7,
+      "gf": 6,
+      "ga": 3,
+      "gd": 3
     },
     {
       "team": "Scotland",
       "group": "Group C",
       "position": 3,
       "played": 3,
-      "points": 4,
+      "points": 3,
       "gf": 1,
-      "ga": 1,
-      "gd": 0
+      "ga": 4,
+      "gd": -3
     },
     {
       "team": "Haiti",
       "group": "Group C",
       "position": 4,
       "played": 3,
-      "points": 1,
-      "gf": 0,
-      "ga": 4,
-      "gd": -4
+      "points": 0,
+      "gf": 2,
+      "ga": 8,
+      "gd": -6
     },
     {
       "team": "United States",
