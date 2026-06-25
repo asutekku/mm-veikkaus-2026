@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-25T17:12:06.224Z",
+  "updatedAt": "2026-06-25T20:01:13.309Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -614,8 +614,8 @@
       "team": "Germany",
       "group": "Group E",
       "position": 1,
-      "played": 2,
-      "points": 6,
+      "played": 3,
+      "points": 7,
       "gf": 9,
       "ga": 2,
       "gd": 7
@@ -624,8 +624,8 @@
       "team": "Ivory Coast",
       "group": "Group E",
       "position": 2,
-      "played": 2,
-      "points": 3,
+      "played": 3,
+      "points": 4,
       "gf": 2,
       "ga": 2,
       "gd": 0
@@ -634,8 +634,8 @@
       "team": "Ecuador",
       "group": "Group E",
       "position": 3,
-      "played": 2,
-      "points": 1,
+      "played": 3,
+      "points": 2,
       "gf": 0,
       "ga": 1,
       "gd": -1
@@ -644,8 +644,8 @@
       "team": "Curaçao",
       "group": "Group E",
       "position": 4,
-      "played": 2,
-      "points": 1,
+      "played": 3,
+      "points": 2,
       "gf": 1,
       "ga": 7,
       "gd": -6
