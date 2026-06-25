@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-25T20:01:13.309Z",
+  "updatedAt": "2026-06-25T22:21:34.819Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -325,6 +325,18 @@
       "home": 1,
       "away": 0,
       "status": "FINISHED"
+    },
+    "55": {
+      "outcome": "2",
+      "home": 0,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "56": {
+      "outcome": "1",
+      "home": 2,
+      "away": 1,
+      "status": "FINISHED"
     }
   },
   "scorers": [
@@ -615,15 +627,25 @@
       "group": "Group E",
       "position": 1,
       "played": 3,
-      "points": 7,
-      "gf": 9,
-      "ga": 2,
-      "gd": 7
+      "points": 6,
+      "gf": 10,
+      "ga": 4,
+      "gd": 6
     },
     {
       "team": "Ivory Coast",
       "group": "Group E",
       "position": 2,
+      "played": 3,
+      "points": 6,
+      "gf": 4,
+      "ga": 2,
+      "gd": 2
+    },
+    {
+      "team": "Ecuador",
+      "group": "Group E",
+      "position": 3,
       "played": 3,
       "points": 4,
       "gf": 2,
@@ -631,24 +653,14 @@
       "gd": 0
     },
     {
-      "team": "Ecuador",
-      "group": "Group E",
-      "position": 3,
-      "played": 3,
-      "points": 2,
-      "gf": 0,
-      "ga": 1,
-      "gd": -1
-    },
-    {
       "team": "Curaçao",
       "group": "Group E",
       "position": 4,
       "played": 3,
-      "points": 2,
+      "points": 1,
       "gf": 1,
-      "ga": 7,
-      "gd": -6
+      "ga": 9,
+      "gd": -8
     },
     {
       "team": "Netherlands",
