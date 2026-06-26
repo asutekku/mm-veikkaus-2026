@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-26T03:43:32.880Z",
+  "updatedAt": "2026-06-26T09:28:18.694Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -349,6 +349,18 @@
       "home": 1,
       "away": 1,
       "status": "FINISHED"
+    },
+    "59": {
+      "outcome": "1",
+      "home": 3,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "60": {
+      "outcome": "X",
+      "home": 0,
+      "away": 0,
+      "status": "FINISHED"
     }
   },
   "scorers": [
@@ -599,10 +611,10 @@
       "group": "Group D",
       "position": 1,
       "played": 3,
-      "points": 7,
+      "points": 6,
       "gf": 8,
-      "ga": 3,
-      "gd": 5
+      "ga": 4,
+      "gd": 4
     },
     {
       "team": "Australia",
@@ -629,10 +641,10 @@
       "group": "Group D",
       "position": 4,
       "played": 3,
-      "points": 1,
-      "gf": 2,
+      "points": 3,
+      "gf": 3,
       "ga": 5,
-      "gd": -3
+      "gd": -2
     },
     {
       "team": "Germany",
