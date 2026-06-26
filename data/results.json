@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-26T17:00:52.919Z",
+  "updatedAt": "2026-06-26T19:48:33.947Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -380,13 +380,19 @@
       "name": "Kylian Mbappé",
       "team": "France",
       "goals": 4,
-      "assists": 0
+      "assists": 2
     },
     {
       "name": "Erling Haaland",
       "team": "Norway",
       "goals": 4,
       "assists": 0
+    },
+    {
+      "name": "Ousmane Dembélé",
+      "team": "France",
+      "goals": 4,
+      "assists": 1
     },
     {
       "name": "Ismael Saibari",
@@ -475,12 +481,6 @@
     {
       "name": "Elijah Just",
       "team": "New Zealand",
-      "goals": 2,
-      "assists": 0
-    },
-    {
-      "name": "Harry Kane",
-      "team": "England",
       "goals": 2,
       "assists": 0
     }
@@ -810,41 +810,41 @@
       "team": "France",
       "group": "Group I",
       "position": 1,
-      "played": 2,
-      "points": 6,
-      "gf": 6,
-      "ga": 1,
-      "gd": 5
+      "played": 3,
+      "points": 9,
+      "gf": 8,
+      "ga": 2,
+      "gd": 6
     },
     {
       "team": "Norway",
       "group": "Group I",
       "position": 2,
-      "played": 2,
+      "played": 3,
       "points": 6,
-      "gf": 7,
-      "ga": 3,
-      "gd": 4
+      "gf": 8,
+      "ga": 5,
+      "gd": 3
     },
     {
       "team": "Senegal",
       "group": "Group I",
       "position": 3,
-      "played": 2,
-      "points": 0,
-      "gf": 3,
+      "played": 3,
+      "points": 3,
+      "gf": 4,
       "ga": 6,
-      "gd": -3
+      "gd": -2
     },
     {
       "team": "Iraq",
       "group": "Group I",
       "position": 4,
-      "played": 2,
+      "played": 3,
       "points": 0,
       "gf": 1,
-      "ga": 7,
-      "gd": -6
+      "ga": 8,
+      "gd": -7
     },
     {
       "team": "Argentina",
