@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-26T19:48:33.947Z",
+  "updatedAt": "2026-06-26T22:13:56.827Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -361,6 +361,18 @@
       "home": 0,
       "away": 0,
       "status": "FINISHED"
+    },
+    "61": {
+      "outcome": "1",
+      "home": 5,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "62": {
+      "outcome": "2",
+      "home": 1,
+      "away": 4,
+      "status": "FINISHED"
     }
   },
   "scorers": [
@@ -431,6 +443,12 @@
       "assists": 0
     },
     {
+      "name": "Ismaïla Sarr",
+      "team": "Senegal",
+      "goals": 3,
+      "assists": 1
+    },
+    {
       "name": "Julián Quiñones",
       "team": "Mexico",
       "goals": 2,
@@ -477,12 +495,6 @@
       "team": "Uruguay",
       "goals": 2,
       "assists": 1
-    },
-    {
-      "name": "Elijah Just",
-      "team": "New Zealand",
-      "goals": 2,
-      "assists": 0
     }
   ],
   "standings": [
@@ -812,9 +824,9 @@
       "position": 1,
       "played": 3,
       "points": 9,
-      "gf": 8,
+      "gf": 10,
       "ga": 2,
-      "gd": 6
+      "gd": 8
     },
     {
       "team": "Norway",
@@ -823,8 +835,8 @@
       "played": 3,
       "points": 6,
       "gf": 8,
-      "ga": 5,
-      "gd": 3
+      "ga": 7,
+      "gd": 1
     },
     {
       "team": "Senegal",
@@ -832,9 +844,9 @@
       "position": 3,
       "played": 3,
       "points": 3,
-      "gf": 4,
+      "gf": 8,
       "ga": 6,
-      "gd": -2
+      "gd": 2
     },
     {
       "team": "Iraq",
@@ -843,8 +855,8 @@
       "played": 3,
       "points": 0,
       "gf": 1,
-      "ga": 8,
-      "gd": -7
+      "ga": 12,
+      "gd": -11
     },
     {
       "team": "Argentina",
