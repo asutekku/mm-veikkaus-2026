@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-27T03:30:14.448Z",
+  "updatedAt": "2026-06-27T08:36:29.028Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -385,6 +385,18 @@
       "home": 0,
       "away": 1,
       "status": "FINISHED"
+    },
+    "65": {
+      "outcome": "X",
+      "home": 1,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "66": {
+      "outcome": "2",
+      "home": 1,
+      "away": 5,
+      "status": "FINISHED"
     }
   },
   "scorers": [
@@ -429,6 +441,12 @@
       "team": "Germany",
       "goals": 3,
       "assists": 2
+    },
+    {
+      "name": "Elijah Just",
+      "team": "New Zealand",
+      "goals": 3,
+      "assists": 0
     },
     {
       "name": "Johan Manzambi",
@@ -501,12 +519,6 @@
       "team": "Sweden",
       "goals": 2,
       "assists": 0
-    },
-    {
-      "name": "Maximiliano Araújo",
-      "team": "Uruguay",
-      "goals": 2,
-      "assists": 1
     }
   ],
   "standings": [
@@ -756,9 +768,9 @@
       "position": 1,
       "played": 3,
       "points": 5,
-      "gf": 2,
-      "ga": 1,
-      "gd": 1
+      "gf": 6,
+      "ga": 2,
+      "gd": 4
     },
     {
       "team": "Egypt",
@@ -786,9 +798,9 @@
       "position": 4,
       "played": 3,
       "points": 1,
-      "gf": 3,
-      "ga": 6,
-      "gd": -3
+      "gf": 4,
+      "ga": 10,
+      "gd": -6
     },
     {
       "team": "Spain",
