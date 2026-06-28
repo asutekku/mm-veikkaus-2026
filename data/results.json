@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-28T03:53:20.412Z",
+  "updatedAt": "2026-06-28T08:52:12.174Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -420,6 +420,18 @@
       "outcome": "1",
       "home": 3,
       "away": 1,
+      "status": "FINISHED"
+    },
+    "71": {
+      "outcome": "X",
+      "home": 3,
+      "away": 3,
+      "status": "FINISHED"
+    },
+    "72": {
+      "outcome": "2",
+      "home": 1,
+      "away": 3,
       "status": "FINISHED"
     }
   },
@@ -912,9 +924,9 @@
       "position": 1,
       "played": 3,
       "points": 9,
-      "gf": 7,
+      "gf": 8,
       "ga": 1,
-      "gd": 6
+      "gd": 7
     },
     {
       "team": "Austria",
@@ -922,8 +934,8 @@
       "position": 2,
       "played": 3,
       "points": 4,
-      "gf": 5,
-      "ga": 5,
+      "gf": 6,
+      "ga": 6,
       "gd": 0
     },
     {
@@ -932,8 +944,8 @@
       "position": 3,
       "played": 3,
       "points": 4,
-      "gf": 4,
-      "ga": 6,
+      "gf": 5,
+      "ga": 7,
       "gd": -2
     },
     {
@@ -943,8 +955,8 @@
       "played": 3,
       "points": 0,
       "gf": 3,
-      "ga": 7,
-      "gd": -4
+      "ga": 8,
+      "gd": -5
     },
     {
       "team": "Colombia",
