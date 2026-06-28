@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-27T22:02:54.662Z",
+  "updatedAt": "2026-06-28T03:53:20.412Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -397,13 +397,37 @@
       "home": 1,
       "away": 5,
       "status": "FINISHED"
+    },
+    "67": {
+      "outcome": "1",
+      "home": 2,
+      "away": 1,
+      "status": "FINISHED"
+    },
+    "68": {
+      "outcome": "2",
+      "home": 0,
+      "away": 2,
+      "status": "FINISHED"
+    },
+    "69": {
+      "outcome": "X",
+      "home": 0,
+      "away": 0,
+      "status": "FINISHED"
+    },
+    "70": {
+      "outcome": "1",
+      "home": 3,
+      "away": 1,
+      "status": "FINISHED"
     }
   },
   "scorers": [
     {
       "name": "Lionel Messi",
       "team": "Argentina",
-      "goals": 5,
+      "goals": 6,
       "assists": 0
     },
     {
@@ -445,6 +469,18 @@
     {
       "name": "Elijah Just",
       "team": "New Zealand",
+      "goals": 3,
+      "assists": 0
+    },
+    {
+      "name": "Yoane Wissa",
+      "team": "Congo DR",
+      "goals": 3,
+      "assists": 0
+    },
+    {
+      "name": "Harry Kane",
+      "team": "England",
       "goals": 3,
       "assists": 0
     },
@@ -507,18 +543,6 @@
       "team": "Netherlands",
       "goals": 2,
       "assists": 1
-    },
-    {
-      "name": "Daichi Kamada",
-      "team": "Japan",
-      "goals": 2,
-      "assists": 0
-    },
-    {
-      "name": "Yasin Ayari",
-      "team": "Sweden",
-      "goals": 2,
-      "assists": 0
     }
   ],
   "standings": [
@@ -886,48 +910,48 @@
       "team": "Argentina",
       "group": "Group J",
       "position": 1,
-      "played": 2,
-      "points": 6,
-      "gf": 5,
-      "ga": 0,
-      "gd": 5
+      "played": 3,
+      "points": 9,
+      "gf": 7,
+      "ga": 1,
+      "gd": 6
     },
     {
       "team": "Austria",
       "group": "Group J",
       "position": 2,
-      "played": 2,
-      "points": 3,
-      "gf": 3,
-      "ga": 3,
+      "played": 3,
+      "points": 4,
+      "gf": 5,
+      "ga": 5,
       "gd": 0
     },
     {
       "team": "Algeria",
       "group": "Group J",
       "position": 3,
-      "played": 2,
-      "points": 3,
-      "gf": 2,
-      "ga": 4,
+      "played": 3,
+      "points": 4,
+      "gf": 4,
+      "ga": 6,
       "gd": -2
     },
     {
       "team": "Jordan",
       "group": "Group J",
       "position": 4,
-      "played": 2,
+      "played": 3,
       "points": 0,
-      "gf": 2,
-      "ga": 5,
-      "gd": -3
+      "gf": 3,
+      "ga": 7,
+      "gd": -4
     },
     {
       "team": "Colombia",
       "group": "Group K",
       "position": 1,
-      "played": 2,
-      "points": 6,
+      "played": 3,
+      "points": 7,
       "gf": 4,
       "ga": 1,
       "gd": 3
@@ -936,8 +960,8 @@
       "team": "Portugal",
       "group": "Group K",
       "position": 2,
-      "played": 2,
-      "points": 4,
+      "played": 3,
+      "points": 5,
       "gf": 6,
       "ga": 1,
       "gd": 5
@@ -946,41 +970,41 @@
       "team": "Congo DR",
       "group": "Group K",
       "position": 3,
-      "played": 2,
-      "points": 1,
-      "gf": 1,
-      "ga": 2,
-      "gd": -1
+      "played": 3,
+      "points": 4,
+      "gf": 4,
+      "ga": 3,
+      "gd": 1
     },
     {
       "team": "Uzbekistan",
       "group": "Group K",
       "position": 4,
-      "played": 2,
-      "points": 0,
-      "gf": 1,
-      "ga": 8,
-      "gd": -7
-    },
-    {
-      "team": "Croatia",
-      "group": "Group L",
-      "position": 1,
       "played": 3,
-      "points": 6,
-      "gf": 4,
-      "ga": 4,
-      "gd": 0
+      "points": 0,
+      "gf": 2,
+      "ga": 11,
+      "gd": -9
     },
     {
       "team": "England",
       "group": "Group L",
+      "position": 1,
+      "played": 3,
+      "points": 7,
+      "gf": 6,
+      "ga": 2,
+      "gd": 4
+    },
+    {
+      "team": "Croatia",
+      "group": "Group L",
       "position": 2,
       "played": 3,
-      "points": 5,
-      "gf": 4,
-      "ga": 2,
-      "gd": 2
+      "points": 6,
+      "gf": 5,
+      "ga": 5,
+      "gd": 0
     },
     {
       "team": "Ghana",
@@ -988,8 +1012,8 @@
       "position": 3,
       "played": 3,
       "points": 4,
-      "gf": 1,
-      "ga": 1,
+      "gf": 2,
+      "ga": 2,
       "gd": 0
     },
     {
@@ -997,10 +1021,10 @@
       "group": "Group L",
       "position": 4,
       "played": 3,
-      "points": 1,
+      "points": 0,
       "gf": 0,
-      "ga": 2,
-      "gd": -2
+      "ga": 4,
+      "gd": -4
     }
   ]
 }
