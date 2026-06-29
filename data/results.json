@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-29T19:58:29.316Z",
+  "updatedAt": "2026-06-29T22:08:22.902Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -473,6 +473,12 @@
       "assists": 0
     },
     {
+      "name": "Kai Havertz",
+      "team": "Germany",
+      "goals": 3,
+      "assists": 0
+    },
+    {
       "name": "Deniz Undav",
       "team": "Germany",
       "goals": 3,
@@ -541,12 +547,6 @@
     {
       "name": "Folarin Balogun",
       "team": "United States",
-      "goals": 2,
-      "assists": 0
-    },
-    {
-      "name": "Kai Havertz",
-      "team": "Germany",
       "goals": 2,
       "assists": 0
     },
