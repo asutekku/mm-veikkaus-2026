@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-30T19:59:01.481Z",
+  "updatedAt": "2026-06-30T22:15:08.776Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -443,6 +443,12 @@
       "assists": 0
     },
     {
+      "name": "Kylian Mbappé",
+      "team": "France",
+      "goals": 5,
+      "assists": 2
+    },
+    {
       "name": "Erling Haaland",
       "team": "Norway",
       "goals": 5,
@@ -455,16 +461,10 @@
       "assists": 1
     },
     {
-      "name": "Kylian Mbappé",
-      "team": "France",
-      "goals": 4,
-      "assists": 2
-    },
-    {
       "name": "Ousmane Dembélé",
       "team": "France",
       "goals": 4,
-      "assists": 1
+      "assists": 2
     },
     {
       "name": "Ismael Saibari",
