@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-30T17:06:26.918Z",
+  "updatedAt": "2026-06-30T19:59:01.481Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -443,6 +443,12 @@
       "assists": 0
     },
     {
+      "name": "Erling Haaland",
+      "team": "Norway",
+      "goals": 5,
+      "assists": 0
+    },
+    {
       "name": "Vinicius Junior",
       "team": "Brazil",
       "goals": 4,
@@ -453,12 +459,6 @@
       "team": "France",
       "goals": 4,
       "assists": 2
-    },
-    {
-      "name": "Erling Haaland",
-      "team": "Norway",
-      "goals": 4,
-      "assists": 0
     },
     {
       "name": "Ousmane Dembélé",
