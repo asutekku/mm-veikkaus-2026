@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-01T17:13:40.085Z",
+  "updatedAt": "2026-07-01T19:56:26.112Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -455,6 +455,12 @@
       "assists": 0
     },
     {
+      "name": "Harry Kane",
+      "team": "England",
+      "goals": 5,
+      "assists": 0
+    },
+    {
       "name": "Vinicius Junior",
       "team": "Brazil",
       "goals": 4,
@@ -499,12 +505,6 @@
     {
       "name": "Yoane Wissa",
       "team": "Congo DR",
-      "goals": 3,
-      "assists": 0
-    },
-    {
-      "name": "Harry Kane",
-      "team": "England",
       "goals": 3,
       "assists": 0
     },
