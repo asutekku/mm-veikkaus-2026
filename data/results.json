@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-30T22:15:08.776Z",
+  "updatedAt": "2026-07-01T03:56:33.696Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -437,16 +437,16 @@
   },
   "scorers": [
     {
+      "name": "Kylian Mbappé",
+      "team": "France",
+      "goals": 6,
+      "assists": 2
+    },
+    {
       "name": "Lionel Messi",
       "team": "Argentina",
       "goals": 6,
       "assists": 0
-    },
-    {
-      "name": "Kylian Mbappé",
-      "team": "France",
-      "goals": 5,
-      "assists": 2
     },
     {
       "name": "Erling Haaland",
@@ -465,6 +465,12 @@
       "team": "France",
       "goals": 4,
       "assists": 2
+    },
+    {
+      "name": "Julián Quiñones",
+      "team": "Mexico",
+      "goals": 3,
+      "assists": 1
     },
     {
       "name": "Ismael Saibari",
@@ -539,7 +545,7 @@
       "assists": 1
     },
     {
-      "name": "Julián Quiñones",
+      "name": "Raúl Jiménez",
       "team": "Mexico",
       "goals": 2,
       "assists": 0
@@ -547,12 +553,6 @@
     {
       "name": "Cyle Larin",
       "team": "Canada",
-      "goals": 2,
-      "assists": 0
-    },
-    {
-      "name": "Folarin Balogun",
-      "team": "United States",
       "goals": 2,
       "assists": 0
     }
