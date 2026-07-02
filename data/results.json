@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-01T22:17:28.745Z",
+  "updatedAt": "2026-07-02T03:37:28.376Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -485,6 +485,12 @@
       "assists": 1
     },
     {
+      "name": "Folarin Balogun",
+      "team": "United States",
+      "goals": 3,
+      "assists": 0
+    },
+    {
       "name": "Ismael Saibari",
       "team": "Morocco",
       "goals": 3,
@@ -547,12 +553,6 @@
     {
       "name": "Raúl Jiménez",
       "team": "Mexico",
-      "goals": 2,
-      "assists": 0
-    },
-    {
-      "name": "Cyle Larin",
-      "team": "Canada",
       "goals": 2,
       "assists": 0
     }
