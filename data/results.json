@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-02T19:27:53.744Z",
+  "updatedAt": "2026-07-02T22:06:15.305Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -467,6 +467,12 @@
       "assists": 1
     },
     {
+      "name": "Mikel Oyarzabal",
+      "team": "Spain",
+      "goals": 4,
+      "assists": 1
+    },
+    {
       "name": "Ousmane Dembélé",
       "team": "France",
       "goals": 4,
@@ -549,12 +555,6 @@
       "team": "Netherlands",
       "goals": 3,
       "assists": 1
-    },
-    {
-      "name": "Raúl Jiménez",
-      "team": "Mexico",
-      "goals": 2,
-      "assists": 0
     }
   ],
   "standings": [
