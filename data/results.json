@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-04T10:54:07.182Z",
+  "updatedAt": "2026-07-04T13:26:36.485Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -440,7 +440,7 @@
       "name": "Lionel Messi",
       "team": "Argentina",
       "goals": 7,
-      "assists": 1
+      "assists": 0
     },
     {
       "name": "Kylian Mbappé",
