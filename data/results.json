@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-03T22:04:12.582Z",
+  "updatedAt": "2026-07-04T02:56:45.165Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -437,16 +437,16 @@
   },
   "scorers": [
     {
+      "name": "Lionel Messi",
+      "team": "Argentina",
+      "goals": 7,
+      "assists": 1
+    },
+    {
       "name": "Kylian Mbappé",
       "team": "France",
       "goals": 6,
       "assists": 2
-    },
-    {
-      "name": "Lionel Messi",
-      "team": "Argentina",
-      "goals": 6,
-      "assists": 0
     },
     {
       "name": "Erling Haaland",
