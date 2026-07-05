@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-05T19:18:12.637Z",
+  "updatedAt": "2026-07-05T22:01:58.239Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -443,15 +443,15 @@
       "assists": 2
     },
     {
-      "name": "Lionel Messi",
-      "team": "Argentina",
+      "name": "Erling Haaland",
+      "team": "Norway",
       "goals": 7,
       "assists": 0
     },
     {
-      "name": "Erling Haaland",
-      "team": "Norway",
-      "goals": 5,
+      "name": "Lionel Messi",
+      "team": "Argentina",
+      "goals": 7,
       "assists": 0
     },
     {
