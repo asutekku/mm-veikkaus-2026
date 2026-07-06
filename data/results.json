@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-05T22:01:58.239Z",
+  "updatedAt": "2026-07-06T03:34:32.916Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -457,12 +457,24 @@
     {
       "name": "Harry Kane",
       "team": "England",
-      "goals": 5,
-      "assists": 0
+      "goals": 6,
+      "assists": 1
+    },
+    {
+      "name": "Julián Quiñones",
+      "team": "Mexico",
+      "goals": 4,
+      "assists": 1
     },
     {
       "name": "Vinicius Junior",
       "team": "Brazil",
+      "goals": 4,
+      "assists": 1
+    },
+    {
+      "name": "Jude Bellingham",
+      "team": "England",
       "goals": 4,
       "assists": 1
     },
@@ -485,10 +497,10 @@
       "assists": 1
     },
     {
-      "name": "Julián Quiñones",
+      "name": "Raúl Jiménez",
       "team": "Mexico",
       "goals": 3,
-      "assists": 1
+      "assists": 0
     },
     {
       "name": "Folarin Balogun",
@@ -543,18 +555,6 @@
       "team": "Brazil",
       "goals": 3,
       "assists": 0
-    },
-    {
-      "name": "Brian Brobbey",
-      "team": "Netherlands",
-      "goals": 3,
-      "assists": 0
-    },
-    {
-      "name": "Cody Gakpo",
-      "team": "Netherlands",
-      "goals": 3,
-      "assists": 1
     }
   ],
   "standings": [
