@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-11T19:03:14.574Z",
+  "updatedAt": "2026-07-11T21:50:03.944Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -461,6 +461,12 @@
       "assists": 1
     },
     {
+      "name": "Jude Bellingham",
+      "team": "England",
+      "goals": 5,
+      "assists": 1
+    },
+    {
       "name": "Ousmane Dembélé",
       "team": "France",
       "goals": 5,
@@ -475,12 +481,6 @@
     {
       "name": "Vinicius Junior",
       "team": "Brazil",
-      "goals": 4,
-      "assists": 1
-    },
-    {
-      "name": "Jude Bellingham",
-      "team": "England",
       "goals": 4,
       "assists": 1
     },
