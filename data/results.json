@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-14T19:20:17.964Z",
+  "updatedAt": "2026-07-14T21:57:54.491Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -467,6 +467,12 @@
       "assists": 1
     },
     {
+      "name": "Mikel Oyarzabal",
+      "team": "Spain",
+      "goals": 5,
+      "assists": 1
+    },
+    {
       "name": "Ousmane Dembélé",
       "team": "France",
       "goals": 5,
@@ -481,12 +487,6 @@
     {
       "name": "Vinicius Junior",
       "team": "Brazil",
-      "goals": 4,
-      "assists": 1
-    },
-    {
-      "name": "Mikel Oyarzabal",
-      "team": "Spain",
       "goals": 4,
       "assists": 1
     },
