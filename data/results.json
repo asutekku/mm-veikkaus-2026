@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-15T19:11:06.574Z",
+  "updatedAt": "2026-07-15T22:00:38.149Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -446,7 +446,7 @@
       "name": "Lionel Messi",
       "team": "Argentina",
       "goals": 8,
-      "assists": 2
+      "assists": 4
     },
     {
       "name": "Erling Haaland",
