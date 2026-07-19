@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-18T21:51:13.394Z",
+  "updatedAt": "2026-07-19T02:44:01.395Z",
   "source": "football-data.org/WC",
   "results": {
     "1": {
@@ -439,8 +439,8 @@
     {
       "name": "Kylian Mbappé",
       "team": "France",
-      "goals": 8,
-      "assists": 3
+      "goals": 10,
+      "assists": 4
     },
     {
       "name": "Lionel Messi",
@@ -455,28 +455,28 @@
       "assists": 0
     },
     {
+      "name": "Jude Bellingham",
+      "team": "England",
+      "goals": 7,
+      "assists": 1
+    },
+    {
       "name": "Harry Kane",
       "team": "England",
       "goals": 6,
       "assists": 1
     },
     {
-      "name": "Jude Bellingham",
-      "team": "England",
+      "name": "Ousmane Dembélé",
+      "team": "France",
       "goals": 6,
-      "assists": 1
+      "assists": 2
     },
     {
       "name": "Mikel Oyarzabal",
       "team": "Spain",
       "goals": 5,
       "assists": 1
-    },
-    {
-      "name": "Ousmane Dembélé",
-      "team": "France",
-      "goals": 5,
-      "assists": 2
     },
     {
       "name": "Julián Quiñones",
@@ -533,6 +533,12 @@
       "assists": 0
     },
     {
+      "name": "Bradley Barcola",
+      "team": "France",
+      "goals": 3,
+      "assists": 1
+    },
+    {
       "name": "Yoane Wissa",
       "team": "Congo DR",
       "goals": 3,
@@ -547,12 +553,6 @@
     {
       "name": "Jonathan David",
       "team": "Canada",
-      "goals": 3,
-      "assists": 0
-    },
-    {
-      "name": "Matheus Cunha",
-      "team": "Brazil",
       "goals": 3,
       "assists": 0
     }
