@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20260730a" />
+  <link rel="stylesheet" href="style.css?v=20260730b" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>" />
 </head>
 <body>
@@ -28,6 +28,7 @@
   <nav class="tabs wrap">
     <button class="tab is-active" data-view="dash">ETUSIVU</button>
     <button class="tab" data-view="matches">OTTELUT</button>
+    <button class="tab" data-view="bracket" hidden>KAAVIO</button>
     <button class="tab" data-view="forecast">ENNUSTE</button>
     <button class="tab" data-view="betting">VEDONLYÖNTI</button>
     <button class="tab" data-view="bonus">BONUKSET</button>
@@ -37,6 +38,7 @@
   <main class="wrap">
     <section id="view-dash" class="view"></section>
     <section id="view-matches" class="view" hidden></section>
+    <section id="view-bracket" class="view" hidden></section>
     <section id="view-forecast" class="view" hidden></section>
     <section id="view-betting" class="view" hidden></section>
     <section id="view-bonus" class="view" hidden></section>

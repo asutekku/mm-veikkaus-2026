@@ -225,12 +225,28 @@
     const BASE = MODEL_BASE, K = MODEL_K;
     const playScore = (ra, rb) => [poisson(BASE * Math.exp(K * (ra - rb))), poisson(BASE * Math.exp(K * (rb - ra)))];
 
-    return { idx, teams, byToken, players, groupMatches, groupGamesByTeam, pick, prior, rating, groups, cands, playerTsKey, playScore, outFromScore, dataW, resolvedIdx: groupMatches.filter(m => m.actual).map(m => m.idx) };
+    // Locked bonus outcomes from the real bracket (null = still to be simulated).
+    // A stage is "known" once the actual result determines it; the top scorer only
+    // locks when the tournament is complete (the golden boot can still change).
+    const oc = res.outcomes || {};
+    const toTokSet = arr => new Set((arr || []).map(tokenOf).filter(Boolean));
+    const known = {
+      sf: (oc.semifinalists && oc.semifinalists.length === 4) ? toTokSet(oc.semifinalists) : null,
+      fin: (oc.finalists && oc.finalists.length === 2) ? toTokSet(oc.finalists) : null,
+      champ: oc.champion ? tokenOf(oc.champion) : null,
+      boot: (oc.complete && oc.topScorer) ? oc.topScorer.name : null,
+    };
+
+    return { idx, teams, byToken, players, groupMatches, groupGamesByTeam, pick, prior, rating, groups, cands, playerTsKey, playScore, outFromScore, dataW, known, resolvedIdx: groupMatches.filter(m => m.actual).map(m => m.idx) };
   }
 
   // ---- core Monte Carlo: simulate the rest of the tournament N times.
-  // `knownSet` = group-match idx whose ACTUAL result is used; all others are simulated. ----
-  function runSims(M, knownSet, N) {
+  // `knownSet` = group-match idx whose ACTUAL result is used; all others are simulated.
+  // `ko` = locked knockout outcomes {sf, fin, champ, boot} (any null => that stage is
+  //        simulated instead of taken from reality). With everything locked the result
+  //        is deterministic, so the true winner ends up at 100%. ----
+  function runSims(M, knownSet, N, ko) {
+    ko = ko || {};
     const { teams, byToken, players, groupMatches, groupGamesByTeam, pick, rating, groups, cands, playerTsKey, playScore, outFromScore, dataW } = M;
     const NP = players.length;
     const futureGG = {}; teams.forEach(t => futureGG[t.token] = groupGamesByTeam[t.token].filter(i => !knownSet.has(i)).length);
@@ -262,33 +278,49 @@
       thirds.sort(cmp);
       for (let i = 0; i < 8 && i < thirds.length; i++) qualified.push(thirds[i]);
 
-      let alive = shuffle(qualified.slice()), sfTeams = null, finTeams = null, champ = null;
-      while (alive.length > 1) {
-        const next = [];
-        for (let i = 0; i + 1 < alive.length; i += 2) {
-          const A = alive[i], B = alive[i + 1];
-          const [ga, gb] = playScore(rating[A], rating[B]); koGames[A]++; koGames[B]++;
-          next.push(ga > gb ? A : gb > ga ? B : (Math.random() < sigmoid(3 * (rating[A] - rating[B])) ? A : B));
+      const playKO = (A, B) => {
+        const [ga, gb] = playScore(rating[A], rating[B]); koGames[A]++; koGames[B]++;
+        return ga > gb ? A : gb > ga ? B : (Math.random() < sigmoid(3 * (rating[A] - rating[B])) ? A : B);
+      };
+      let sfTeams = null, finTeams = null, champ = null;
+      if (ko.champ) {                             // fully known: champion (and everything before) locked
+        champ = ko.champ; finTeams = ko.fin ? [...ko.fin] : null; sfTeams = ko.sf ? [...ko.sf] : null;
+      } else if (ko.fin) {                        // finalists known, simulate the final only
+        finTeams = [...ko.fin]; sfTeams = ko.sf ? [...ko.sf] : null;
+        champ = playKO(finTeams[0], finTeams[1]);
+      } else if (ko.sf) {                         // semifinalists known, simulate semis + final (pairing approximated)
+        sfTeams = [...ko.sf];
+        const s = shuffle(sfTeams.slice());
+        finTeams = [playKO(s[0], s[1]), playKO(s[2], s[3])];
+        champ = playKO(finTeams[0], finTeams[1]);
+      } else {                                    // nothing known: simulate the whole bracket from the qualifiers
+        let alive = shuffle(qualified.slice());
+        while (alive.length > 1) {
+          const next = [];
+          for (let i = 0; i + 1 < alive.length; i += 2) next.push(playKO(alive[i], alive[i + 1]));
+          if (next.length === 4) sfTeams = next.slice();
+          if (next.length === 2) finTeams = next.slice();
+          if (next.length === 1) champ = next[0];
+          alive = next;
         }
-        if (next.length === 4) sfTeams = next.slice();
-        if (next.length === 2) finTeams = next.slice();
-        if (next.length === 1) champ = next[0];
-        alive = next;
       }
       const sfSet = new Set(sfTeams || []), finSet = new Set(finTeams || []);
       sfSet.forEach(t => pSF[t]++); finSet.forEach(t => pFin[t]++); if (champ) pCh[champ]++;
 
-      let boot = null, bootGoals = -1;
-      for (const c of cands) {
-        const games = (c.teamTok ? futureGG[c.teamTok] + koGames[c.teamTok] : 1);
-        const obs = (c.goals / Math.max(2, c.played)) || 0;
-        // reputation floor (elite finishers) matters early, observed rate takes over as goals pile up
-        const seedRate = c.rep ? 0.55 : 0.22;
-        const rate = dataW * obs + (1 - dataW) * seedRate || 0.15;
-        const total = c.goals + poisson(Math.max(0.05, rate * games));
-        if (total > bootGoals) { bootGoals = total; boot = c.name; }
+      let boot = ko.boot || null;
+      if (!boot) {
+        let bootGoals = -1;
+        for (const c of cands) {
+          const games = (c.teamTok ? futureGG[c.teamTok] + koGames[c.teamTok] : 1);
+          const obs = (c.goals / Math.max(2, c.played)) || 0;
+          // reputation floor (elite finishers) matters early, observed rate takes over as goals pile up
+          const seedRate = c.rep ? 0.55 : 0.22;
+          const rate = dataW * obs + (1 - dataW) * seedRate || 0.15;
+          const total = c.goals + poisson(Math.max(0.05, rate * games));
+          if (total > bootGoals) { bootGoals = total; boot = c.name; }
+        }
       }
-      if (boot) tsWin[boot]++;
+      if (boot) tsWin[boot] = (tsWin[boot] || 0) + 1;
 
       let best = -1, ties = [];
       for (let pi = 0; pi < NP; pi++) {
@@ -314,7 +346,7 @@
     const M = prepare(pred, res, T);
     const { teams, byToken, players, pick, rating, cands, playerTsKey, groupMatches } = M;
     const knownSet = new Set(M.resolvedIdx);
-    const r = runSims(M, knownSet, SIMS);
+    const r = runSims(M, knownSet, SIMS, M.known);   // lock in whatever the real bracket already decided
 
     // current (locked) group points per player
     const curGroup = {}; players.forEach(p => curGroup[p] = 0);
@@ -362,13 +394,30 @@
       counts = [...new Set(counts)];
     }
 
-    const steps = counts.map(s => {
-      const knownSet = new Set(chrono.slice(0, s));
-      const r = runSims(M, knownSet, N);
+    const winAt = (knownSet, ko) => {
+      const r = runSims(M, knownSet, N, ko);
       const win = {}; players.forEach((p, pi) => win[p] = r.wins[pi] / N);
-      return { played: s, win };
-    });
-    return { players, steps, total: pred.matches.length };
+      return win;
+    };
+
+    // group-stage checkpoints: results revealed match by match, knockouts still open
+    const allGroup = new Set(chrono);
+    const steps = counts.map(s => ({ played: s, win: winAt(new Set(chrono.slice(0, s)), {}), stage: 'group' }));
+
+    // knockout milestones: each locks in the real bonus outcomes as they're decided,
+    // so the win% line bends toward whoever actually banked the bonus points.
+    const bracket = (res.outcomes && res.outcomes.bracket) || [];
+    const cnt = st => bracket.filter(b => b.stage === st).length;
+    const groupTotal = pred.matches.length;
+    const afterQF = groupTotal + cnt('LAST_32') + cnt('LAST_16') + cnt('QUARTER_FINALS');
+    const afterSF = afterQF + cnt('SEMI_FINALS');
+    const afterFinal = afterSF + cnt('THIRD_PLACE') + cnt('FINAL');
+    const K = M.known;
+    if (K.sf) steps.push({ played: afterQF, win: winAt(allGroup, { sf: K.sf }), stage: 'sf', label: 'Välierät selvillä' });
+    if (K.fin) steps.push({ played: afterSF, win: winAt(allGroup, { sf: K.sf, fin: K.fin }), stage: 'fin', label: 'Finalistit selvillä' });
+    if (K.champ) steps.push({ played: afterFinal, win: winAt(allGroup, K), stage: 'champ', label: 'Mestari ratkennut' });
+
+    return { players, steps, total: afterFinal, groupTotal };
   }
 
   // ---- luck index: actual points vs expected points (xP) on played group games ----

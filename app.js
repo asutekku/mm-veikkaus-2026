@@ -406,6 +406,12 @@ function renderWinChart(colors) {
       if (b > 0) xlab += `<text x="${X(b).toFixed(1)}" y="${H - 5}" text-anchor="middle">K${Math.min(3, b / 24)}</text>`;
     }
   });
+  // knockout milestones (semifinals set / finalists set / champion) where the bonuses lock in
+  const koMarks = { sf: 'VE', fin: 'FIN', champ: '🏆' };
+  steps.filter(s => koMarks[s.stage]).forEach(s => {
+    xlab += `<line class="ko-mark" x1="${X(s.played).toFixed(1)}" y1="${padT}" x2="${X(s.played).toFixed(1)}" y2="${H - padB}"/>`;
+    xlab += `<text x="${X(s.played).toFixed(1)}" y="${padT + 8}" text-anchor="middle" class="ko-lab">${koMarks[s.stage]}</text>`;
+  });
   const lines = players.map(p => {
     const pts = steps.map(s => `${X(s.played).toFixed(1)},${Y(s.win[p]).toFixed(1)}`).join(' ');
     const cls = 'pline' + (p === lead ? ' lead' : '') + (state.sel.has(p) ? ' sel' : '');
@@ -429,13 +435,13 @@ function renderWinChart(colors) {
 
 function renderStandingsTable(st, colors) {
   const done = st.complete;
-  const showP = state.showProb && !done;   // projections give way to the real result once complete
+  const showP = state.showProb;   // win% now reflects the real outcome even once complete
   const head = `<thead><tr>
     <th class="l">#</th><th></th><th class="l">Pelaaja</th>
     ${done ? '<th class="hide-sm">Lohko</th><th>Bonus</th>' : ''}
     <th>${done ? 'Yht.' : 'Pist'}</th><th class="l barcell hide-sm">Eteneminen</th>
     <th class="hide-sm">Osuma</th><th class="hide-sm">Viim. 5</th>
-    ${showP ? '<th>Voitto-%</th><th>Ennuste</th>' : ''}</tr></thead>`;
+    ${showP ? `<th>Voitto-%</th>${done ? '' : '<th>Ennuste</th>'}` : ''}</tr></thead>`;
   const max = st.leaderPts || 1;
   const body = st.rows.map(r => {
     const d = r.delta;
@@ -449,7 +455,7 @@ function renderStandingsTable(st, colors) {
       ? `<span class="num" title="projisoitu lopputulos (alkulohko + bonukset)">~${Math.round(r.projTotal)} p</span>`
       : (r.rank === 1 ? '<span class="badge live">KÄRJESSÄ</span>' : '<span class="muted">…</span>');
     const probCells = showP
-      ? `<td class="winp ${r.win >= 0.15 ? 'hot' : ''}">${winPct}</td><td>${status}</td>` : '';
+      ? `<td class="winp ${r.win >= 0.15 ? 'hot' : ''}">${winPct}</td>${done ? '' : `<td>${status}</td>`}` : '';
     const finalCells = done
       ? `<td class="hide-sm num muted">${r.groupPts}</td><td class="num ${r.bonus > 0 ? 'pl-pos' : 'muted'}">${r.bonus > 0 ? '+' + r.bonus : '0'}</td>` : '';
     return `<tr class="tr-${r.rank}${done && r.rank === 1 ? ' champ-row' : ''}">
@@ -530,10 +536,12 @@ function chartsHTML(colors) {
       ${renderChart(colors)}
     </div>`;
   if (!state.showProb) return pointsPanel;
-  const winSub = state.timeline ? state.timeline.steps[state.timeline.steps.length - 1].played + ' ottelua' : '…';
+  const done = isComplete();
+  const title = done ? 'Matka mestaruuteen' : 'Voittotodennäköisyys';
+  const sub = done ? 'voitto-% kehittyi · sis. pudotuspelit · klikkaa nimeä' : 'kehitys · klikkaa nimeä';
   return pointsPanel + `
     <div class="panel chart-card mb">
-      <div class="panel-h"><h2>Voittotodennäköisyys</h2><span class="sub">kehitys · ${winSub} · klikkaa nimeä</span></div>
+      <div class="panel-h"><h2>${title}</h2><span class="sub">${sub}</span></div>
       ${renderWinChart(colors)}
     </div>`;
 }
@@ -640,6 +648,46 @@ function renderMatches() {
       state._matrixHl = state._matrixHl === p ? null : p;
       renderMatches();
     }));
+}
+
+/* ----- knockout bracket ----- */
+const KO_LABELS = {
+  LAST_32: '32:n kierros', LAST_16: '16:n kierros', QUARTER_FINALS: 'Puolivälierät',
+  SEMI_FINALS: 'Välierät', THIRD_PLACE: 'Pronssiottelu', FINAL: 'Finaali',
+};
+const KO_ORDER = ['LAST_32', 'LAST_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL'];
+
+function renderBracket() {
+  const o = outcomes();
+  const el = document.getElementById('view-bracket');
+  if (!el) return;
+  const bracket = (o && o.bracket) || [];
+  if (!bracket.length) { el.innerHTML = '<p class="muted">Pudotuspelit eivät ole vielä alkaneet.</p>'; return; }
+
+  // is a team the winner of its tie? compare by normalized name
+  const nrm = n => (window.Teams ? window.Teams.norm(n) : String(n || '').toLowerCase());
+  const cols = KO_ORDER.filter(st => bracket.some(b => b.stage === st)).map(st => {
+    const ties = bracket.filter(b => b.stage === st);
+    const cards = ties.map(t => {
+      const played = t.hs != null && t.as != null;
+      const homeWin = t.winner && nrm(t.winner) === nrm(t.home);
+      const awayWin = t.winner && nrm(t.winner) === nrm(t.away);
+      const pen = (t.penH != null && t.penA != null) ? ` <span class="br-pen">rp ${t.penH}–${t.penA}</span>` : '';
+      const side = (name, win, isHome) => `<div class="br-team ${win ? 'win' : (t.winner ? 'lose' : '')}">
+        <span class="br-nm">${esc(fiName(name) || '—')}</span>
+        <span class="br-sc">${played ? (isHome ? t.hs : t.as) : ''}${win ? pen : ''}</span></div>`;
+      return `<div class="br-tie ${t.winner ? 'done' : 'pending'}">
+        ${side(t.home, homeWin, true)}
+        ${side(t.away, awayWin, false)}</div>`;
+    }).join('');
+    return `<div class="br-col"><div class="br-head">${KO_LABELS[st] || st}</div>${cards}</div>`;
+  }).join('');
+
+  const champ = o.complete && o.champion
+    ? `<div class="br-champ">🏆 <span>Maailmanmestari</span> <b>${esc(fiName(o.champion))}</b></div>` : '';
+
+  el.innerHTML = `<p class="muted" style="margin-top:0">Pudotuspelikaavio — voittaja korostettuna. ${o.complete ? '' : 'Turnaus kesken.'}</p>
+    ${champ}<div class="bracket-scroll"><div class="bracket">${cols}</div></div>`;
 }
 
 /* ----- betting view ----- */
@@ -921,7 +969,7 @@ function renderBonus() {
 /* ----- tabs / toggle / boot ----- */
 function setView(n) {
   document.querySelectorAll('.tab[data-view]').forEach(t => t.classList.toggle('is-active', t.dataset.view === n));
-  ['dash', 'matches', 'forecast', 'betting', 'bonus'].forEach(v => document.getElementById('view-' + v).hidden = v !== n);
+  ['dash', 'matches', 'bracket', 'forecast', 'betting', 'bonus'].forEach(v => document.getElementById('view-' + v).hidden = v !== n);
 }
 function fmtUpdated(iso) {
   try { return new Date(iso).toLocaleString('fi-FI', { dateStyle: 'medium', timeStyle: 'short' }); }
@@ -929,7 +977,7 @@ function fmtUpdated(iso) {
 }
 
 function renderAll() {
-  renderDash(); renderMatches(); renderForecast(); renderBetting(); renderBonus();
+  renderDash(); renderMatches(); renderBracket(); renderForecast(); renderBetting(); renderBonus();
 }
 
 // Run the (spoilery) simulation only once probabilities are revealed.
@@ -964,6 +1012,12 @@ async function boot() {
     const [pred, res] = await Promise.all([loadJSON('data/predictions.json'), loadJSON('data/results.json')]);
     state.pred = pred; state.res = res;
     document.getElementById('updated').textContent = 'Päivitetty ' + fmtUpdated(res.updatedAt);
+
+    // tournament over → reveal forecasts by default (no suspense left), unless the user chose otherwise
+    try { if (isComplete() && localStorage.getItem('mmv_showProb') == null) state.showProb = true; } catch { }
+    // surface the bracket tab once the knockouts exist
+    const brTab = document.querySelector('.tab[data-view="bracket"]');
+    if (brTab) brTab.hidden = !(res.outcomes && res.outcomes.bracket && res.outcomes.bracket.length);
     // cheap team index for name normalization (no simulation — not a spoiler)
     if (window.Sim && window.Teams && res.standings && res.standings.length) {
       try { state.teamIndex = window.Sim.buildIndex(res.standings, window.Teams); } catch (e) { console.error(e); }

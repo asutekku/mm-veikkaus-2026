@@ -244,6 +244,30 @@ td.odds-win .odds-n { color: var(--good); opacity: 0.7; }
 .wc-val { font-family: var(--disp); font-weight: 600; color: var(--ink); font-size: 0.92rem; }
 .wc-val small { color: var(--gold); font-family: var(--mono); }
 
+/* ---------- Knockout bracket ---------- */
+.bracket-scroll { overflow-x: auto; padding: 4px 2px 10px; }
+.bracket { display: flex; gap: 14px; align-items: flex-start; min-width: min-content; }
+.br-col { display: flex; flex-direction: column; gap: 10px; min-width: 150px; }
+.br-head { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--lime-dim); padding-bottom: 2px; }
+.br-tie { border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.br-tie.pending { opacity: 0.6; border-style: dashed; }
+.br-team { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 10px; font-size: 0.82rem; border-bottom: 1px solid var(--line); }
+.br-team:last-child { border-bottom: none; }
+.br-nm { font-family: var(--disp); font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.br-sc { font-family: var(--mono); font-weight: 700; color: var(--ink-2); }
+.br-team.win .br-nm { color: var(--lime); }
+.br-team.win .br-sc { color: var(--lime); }
+.br-team.lose .br-nm, .br-team.lose .br-sc { color: var(--muted); }
+.br-pen { font-family: var(--mono); font-size: 0.62rem; color: var(--gold); font-weight: 500; margin-left: 3px; }
+.br-champ { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 10px 14px; border-radius: 10px;
+  background: linear-gradient(90deg, rgba(255,210,74,0.14), transparent); border: 1px solid rgba(255,210,74,0.35); }
+.br-champ span { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); }
+.br-champ b { font-family: var(--disp); font-size: 1.1rem; color: var(--ink); }
+
+/* knockout milestone marks on the win-probability chart */
+.chart .ko-mark { stroke: var(--gold); stroke-width: 1; stroke-dasharray: 2 2; opacity: 0.55; }
+.chart .ko-lab { font-family: var(--mono); font-size: 8px; fill: var(--gold); }
+
 /* winner row in the final standings */
 tr.champ-row { background: rgba(255,210,74,0.07); }
 tr.champ-row .st-name { color: var(--gold); font-weight: 700; }

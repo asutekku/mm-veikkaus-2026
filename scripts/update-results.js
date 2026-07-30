@@ -41,29 +41,53 @@ function winnerOf(am) {
   return null;
 }
 
-// Derive the tournament's bonus outcomes (who actually reached each stage) from
-// the finished knockout fixtures. Returns null until the final has been played,
-// so the site only "locks in" real bonus points once the tournament is complete.
+const KO_STAGES = ['LAST_32', 'LAST_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL'];
+
+// Derive the knockout bracket + bonus outcomes from the fixtures. Returns whatever
+// is known so far (so the bracket view works mid-knockout) with `complete` flipping
+// true only once the final has been played — the point at which the site locks in
+// real bonus points. Returns null while it's still pure group stage.
 function deriveOutcomes(apiMatches, scorers) {
-  const finished = st => apiMatches.filter(m => m.stage === st && FINAL.has(m.status));
-  const finalM = finished('FINAL')[0];
-  const semis = finished('SEMI_FINALS');
-  if (!finalM || semis.length < 2) return null;
+  const ko = apiMatches.filter(m => KO_STAGES.includes(m.stage));
+  if (!ko.length) return null;
+
+  const bracket = ko.map(m => {
+    const ft = (m.score && m.score.fullTime) || {};
+    const pk = (m.score && m.score.penalties) || null;
+    return {
+      stage: m.stage,
+      home: teamNameOf(m.homeTeam),
+      away: teamNameOf(m.awayTeam),
+      hs: ft.home != null ? ft.home : null,
+      as: ft.away != null ? ft.away : null,
+      penH: pk ? pk.home : null,
+      penA: pk ? pk.away : null,
+      winner: FINAL.has(m.status) ? winnerOf(m) : null,
+      status: m.status,
+      date: m.utcDate || null,
+    };
+  }).filter(t => t.home || t.away);
+
+  const withTeams = st => ko.filter(m => m.stage === st && teamNameOf(m.homeTeam) && teamNameOf(m.awayTeam));
+  const semis = withTeams('SEMI_FINALS');
+  const finSched = withTeams('FINAL')[0];
+  const finalM = ko.find(m => m.stage === 'FINAL' && FINAL.has(m.status));
 
   const push = (arr, n) => { if (n && !arr.includes(n)) arr.push(n); };
   const semifinalists = [];
   semis.forEach(m => { push(semifinalists, teamNameOf(m.homeTeam)); push(semifinalists, teamNameOf(m.awayTeam)); });
-  const finalists = [teamNameOf(finalM.homeTeam), teamNameOf(finalM.awayTeam)].filter(Boolean);
-  const champion = winnerOf(finalM);
-  const ft = (finalM.score && finalM.score.fullTime) || {};
+  const finalists = finSched ? [teamNameOf(finSched.homeTeam), teamNameOf(finSched.awayTeam)].filter(Boolean) : [];
+  const champion = finalM ? winnerOf(finalM) : null;
+  const ft = finalM ? ((finalM.score && finalM.score.fullTime) || {}) : {};
 
   return {
-    complete: true,
+    complete: !!finalM,
     champion,
-    finalScore: ft.home != null ? `${ft.home}–${ft.away}` : null,
+    finalScore: finalM && ft.home != null ? `${ft.home}–${ft.away}` : null,
     finalists,
     semifinalists,
     topScorer: scorers[0] ? { name: scorers[0].name, team: scorers[0].team, goals: scorers[0].goals } : null,
+    bracket,
   };
 }
 
