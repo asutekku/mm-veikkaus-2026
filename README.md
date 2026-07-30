@@ -11,12 +11,24 @@ Match results (and top scorers) are fetched automatically and everything updates
   - the **Golden Boot race** with everyone's top-scorer bet normalized to real player names + live goal counts
   - **tournament insights** (biggest upset, banker, biggest win, goals/match, draw rate)
 - **Ottelut** – the full prediction grid (everyone's guess per match, green = correct, red = wrong, plus how many got each match right). Tap a name to highlight their column.
-- **Bonukset** – the semifinal / final / champion / top-scorer predictions, with a popularity tally (scored by hand at the end).
+- **Bonukset** – the semifinal / final / champion / top-scorer predictions. During the
+  tournament it shows live hit-probabilities; once the final is played it flips into a
+  **results view** — the real outcomes plus who nailed what, scored automatically.
 
-**Win probability** is a Monte Carlo simulation (8000 runs): everyone's guesses for
-the remaining matches are locked in, and each unplayed match is resolved using the
-*family's own consensus* (how the 18 of us split 1/X/2) as its odds. Only group-stage
-1X2 points count toward it — bonus rounds are excluded.
+Once the tournament is over the dashboard shows a **champion banner** (family-league
+winner + the real World Cup champion, final and Golden Boot) and a **final standings**
+table where each player's total is group points **+ bonus points** (semifinalist 5,
+finalist 10, champion +10, top scorer 10). Bonus team-picks are matched with the same
+word-boundary tokenizer the simulation uses, so dash/comma/"ja"-separated picks all
+resolve correctly.
+
+**Win probability** is a full-tournament Monte Carlo simulation. Team strength blends
+three things: **group-stage performance**, a **pre-tournament seed** (real-world
+pedigree — see `SEED_STRENGTH` in `sim.js`), and the **family's own bets**. The seed
+grounds champion/top-scorer odds from match 1 and is automatically weighted down as
+real results arrive, so by the end of the group stage it's the actual results doing the
+talking. The golden-boot race works the same way (elite finishers keep a scoring floor
+early, observed goals take over).
 
 ## How it works
 
@@ -79,5 +91,22 @@ updater prints it — add the alias to `scripts/teams.js`.
   spreadsheet** (seeded via `npm run seed`), so it works out of the box.
 - The updater never deletes results — if the API is briefly missing a match,
   the previously stored result stays.
-- Bonus predictions (semifinal four, final, champion, top scorer) resolve only at
-  the end of the tournament and are scored manually.
+- Bonus predictions (semifinal four, final, champion, top scorer) are resolved and
+  scored **automatically** once the final has been played: `update-results.js` reads
+  the knockout bracket and records the actual semifinalists / finalists / champion /
+  top scorer into `results.json` under `outcomes`.
+
+## Reusing it for the next tournament
+
+The whole thing is built to be re-run next time (Euros, next World Cup, …):
+
+1. Drop in the new Excel of everyone's guesses and run `npm run build` to regenerate
+   `data/predictions.json`.
+2. Point `scripts/update-results.js` at the new competition code (`BASE`, currently
+   `WC`) and check `scripts/teams.js` covers the new team names.
+3. Refresh the two pre-tournament priors in `sim.js` — `SEED_STRENGTH` (team strengths,
+   e.g. from the FIFA ranking) and `SCORER_REP` (elite finishers) — so the early-round
+   probabilities are grounded in past performance before any games are played.
+4. Everything else — scoring, charts, bonus resolution, champion banner — just works.
+
+(For collecting next year's guesses we'll likely use a Google Form instead of the Excel.)

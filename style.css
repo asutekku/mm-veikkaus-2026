@@ -220,6 +220,39 @@ td.odds-win .odds-n { color: var(--good); opacity: 0.7; }
 .tally .t { font-family: var(--mono); font-size: 0.7rem; padding: 4px 9px; border-radius: 5px; background: var(--bg-2); border: 1px solid var(--line-2); color: var(--ink-2); }
 .tally .t b { color: var(--lime); }
 
+/* ---------- Champion banner (tournament complete) ---------- */
+.champ-banner {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  padding: 18px 22px; border-radius: 14px;
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(255,210,74,0.16), transparent 55%),
+    linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid rgba(255,210,74,0.4);
+}
+.cb-crown { font-size: 2.6rem; line-height: 1; filter: drop-shadow(0 2px 10px rgba(255,210,74,0.4)); }
+.cb-main { flex: 1 1 200px; }
+.cb-kicker { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.28em; color: var(--gold); text-transform: uppercase; }
+.cb-name { font-family: var(--disp); font-size: 2rem; font-weight: 700; color: var(--ink); line-height: 1.05; margin-top: 2px; }
+.cb-sub { font-family: var(--mono); font-size: 0.76rem; color: var(--ink-2); margin-top: 4px; }
+.cb-facts, .wc-facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.wc-facts { padding: 12px 16px 16px; }
+.wc-chip {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 12px; border-radius: 9px; background: var(--bg-2); border: 1px solid var(--line-2);
+}
+.wc-lab { font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
+.wc-val { font-family: var(--disp); font-weight: 600; color: var(--ink); font-size: 0.92rem; }
+.wc-val small { color: var(--gold); font-family: var(--mono); }
+
+/* winner row in the final standings */
+tr.champ-row { background: rgba(255,210,74,0.07); }
+tr.champ-row .st-name { color: var(--gold); font-weight: 700; }
+tr.champ-row .st-pts { color: var(--gold); }
+
+/* hit / miss chips in the bonus results view */
+.pchip.hit { border-color: rgba(56,217,121,0.5); color: var(--good); background: var(--good-bg); }
+.pchip.miss { color: var(--muted); opacity: 0.7; text-decoration: line-through; }
+
 .site-footer { padding: 18px 18px 50px; color: var(--ink-2); font-size: 0.78rem; border-top: 1px solid var(--line); margin-top: 8px; }
 .site-footer b { color: var(--ink); }
 

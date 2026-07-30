@@ -41,6 +41,29 @@
 
   const deburr = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
+  // ---- Pre-tournament priors ("based on past performances") ----
+  // A rough team-strength seed (0..1), keyed by the normalized English team name.
+  // It grounds champion/finalist odds in real-world pedigree BEFORE the group stage
+  // has produced enough data — its influence is automatically weighted down as
+  // actual results arrive (see `prepare`). Unlisted teams default to SEED_DEFAULT.
+  // >>> NEXT TOURNAMENT: just refresh these numbers (e.g. from FIFA ranking). <<<
+  const SEED_DEFAULT = 0.45;
+  const SEED_STRENGTH = {
+    spain: 0.95, france: 0.95, argentina: 0.92, brazil: 0.90, england: 0.88,
+    portugal: 0.85, netherlands: 0.82, germany: 0.80, belgium: 0.75, croatia: 0.72,
+    uruguay: 0.70, colombia: 0.68, morocco: 0.68, norway: 0.66, switzerland: 0.63,
+    unitedstates: 0.62, usa: 0.62, mexico: 0.60, senegal: 0.62, japan: 0.60,
+    denmark: 0.62, austria: 0.60, ecuador: 0.58, southkorea: 0.55, korearepublic: 0.55,
+    australia: 0.52, canada: 0.55, egypt: 0.55, ghana: 0.52, ivorycoast: 0.55,
+    qatar: 0.45, saudiarabia: 0.45, iran: 0.55, tunisia: 0.50, algeria: 0.55,
+    scotland: 0.55, paraguay: 0.55, panama: 0.45, uzbekistan: 0.45, jordan: 0.42,
+    haiti: 0.35, curacao: 0.35, capeverde: 0.35, newzealand: 0.42, kongo: 0.48, congo: 0.48,
+  };
+  // Elite finishers keep a scoring floor early on (reputation), decaying to nothing
+  // as real goals accumulate. Keyed by deburred surname. Refresh per tournament.
+  const SCORER_REP = new Set(['mbappe', 'haaland', 'kane', 'messi', 'martinez', 'lautaro',
+    'yamal', 'vinicius', 'bellingham', 'osimhen', 'alvarez', 'griezmann', 'dembele', 'kolomuani']);
+
   // Canonical scorer name. Matches the raw pick to the live top-scorer list by
   // surname (so "Mbappe", "mbappe (sama vanha)" etc. all become the API spelling),
   // else falls back to a curated spelling.
@@ -162,14 +185,20 @@
       sf.forEach(t => prior[t] += 1); fin.forEach(t => prior[t] += 2); if (champ) prior[champ] += 3;
     });
 
-    // ratings: group performance blended with the family-bet prior
+    // ratings: (group performance ⟵blended by data availability⟶ pre-tournament seed),
+    // then blended with the family-bet prior.
     const perf = {}; teams.forEach(t => { const pl = Math.max(1, t.played); perf[t.token] = (t.pts / pl) + 0.30 * ((t.gf - t.ga) / pl); });
     const pv = Object.values(perf), pmin = Math.min(...pv), pmax = Math.max(...pv);
     const prMax = Math.max(1, ...Object.values(prior));
+    // how much do we trust group results yet? 0 before kickoff, 1 once all 3 rounds are in.
+    const avgPlayed = teams.length ? teams.reduce((s, t) => s + t.played, 0) / teams.length : 0;
+    const dataW = Math.max(0, Math.min(1, avgPlayed / 3));
     const rating = {};
     teams.forEach(t => {
       const pn = pmax > pmin ? (perf[t.token] - pmin) / (pmax - pmin) : 0.5;
-      rating[t.token] = 0.55 * pn + 0.45 * (prior[t.token] / prMax);
+      const seed = SEED_STRENGTH[t.token] != null ? SEED_STRENGTH[t.token] : SEED_DEFAULT;
+      const strength = dataW * pn + (1 - dataW) * seed;   // seed dominates early, perf takes over later
+      rating[t.token] = 0.55 * strength + 0.45 * (prior[t.token] / prMax);
     });
 
     const groups = {}; teams.forEach(t => { (groups[t.group] = groups[t.group] || []).push(t.token); });
@@ -179,7 +208,7 @@
     const candMap = {};
     const addCand = (name, teamName, goals, played) => {
       if (!name) return; const key = surnameOf(name);
-      if (!candMap[key]) candMap[key] = { name, teamTok: tokenOf(teamName), goals: goals || 0, played: played || 2 };
+      if (!candMap[key]) candMap[key] = { name, teamTok: tokenOf(teamName), goals: goals || 0, played: played || 2, rep: SCORER_REP.has(key) };
     };
     apiScorers.forEach(s => addCand(s.name, s.team, s.goals, 2));
     players.forEach(p => {
@@ -196,13 +225,13 @@
     const BASE = MODEL_BASE, K = MODEL_K;
     const playScore = (ra, rb) => [poisson(BASE * Math.exp(K * (ra - rb))), poisson(BASE * Math.exp(K * (rb - ra)))];
 
-    return { idx, teams, byToken, players, groupMatches, groupGamesByTeam, pick, prior, rating, groups, cands, playerTsKey, playScore, outFromScore, resolvedIdx: groupMatches.filter(m => m.actual).map(m => m.idx) };
+    return { idx, teams, byToken, players, groupMatches, groupGamesByTeam, pick, prior, rating, groups, cands, playerTsKey, playScore, outFromScore, dataW, resolvedIdx: groupMatches.filter(m => m.actual).map(m => m.idx) };
   }
 
   // ---- core Monte Carlo: simulate the rest of the tournament N times.
   // `knownSet` = group-match idx whose ACTUAL result is used; all others are simulated. ----
   function runSims(M, knownSet, N) {
-    const { teams, byToken, players, groupMatches, groupGamesByTeam, pick, rating, groups, cands, playerTsKey, playScore, outFromScore } = M;
+    const { teams, byToken, players, groupMatches, groupGamesByTeam, pick, rating, groups, cands, playerTsKey, playScore, outFromScore, dataW } = M;
     const NP = players.length;
     const futureGG = {}; teams.forEach(t => futureGG[t.token] = groupGamesByTeam[t.token].filter(i => !knownSet.has(i)).length);
 
@@ -252,7 +281,10 @@
       let boot = null, bootGoals = -1;
       for (const c of cands) {
         const games = (c.teamTok ? futureGG[c.teamTok] + koGames[c.teamTok] : 1);
-        const rate = (c.goals / Math.max(2, c.played)) || 0.15;
+        const obs = (c.goals / Math.max(2, c.played)) || 0;
+        // reputation floor (elite finishers) matters early, observed rate takes over as goals pile up
+        const seedRate = c.rep ? 0.55 : 0.22;
+        const rate = dataW * obs + (1 - dataW) * seedRate || 0.15;
         const total = c.goals + poisson(Math.max(0.05, rate * games));
         if (total > bootGoals) { bootGoals = total; boot = c.name; }
       }

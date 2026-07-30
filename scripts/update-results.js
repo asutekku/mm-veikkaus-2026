@@ -28,6 +28,45 @@ function outcome(h, a) {
   return '2';
 }
 
+const teamNameOf = t => t && (t.name || t.shortName) || null;
+
+// Winner of a knockout tie (handles extra time + penalties via score.winner).
+function winnerOf(am) {
+  const w = am.score && am.score.winner;
+  if (w === 'HOME_TEAM') return teamNameOf(am.homeTeam);
+  if (w === 'AWAY_TEAM') return teamNameOf(am.awayTeam);
+  const pk = am.score && am.score.penalties;
+  if (pk && pk.home != null && pk.away != null)
+    return (pk.home > pk.away ? teamNameOf(am.homeTeam) : teamNameOf(am.awayTeam));
+  return null;
+}
+
+// Derive the tournament's bonus outcomes (who actually reached each stage) from
+// the finished knockout fixtures. Returns null until the final has been played,
+// so the site only "locks in" real bonus points once the tournament is complete.
+function deriveOutcomes(apiMatches, scorers) {
+  const finished = st => apiMatches.filter(m => m.stage === st && FINAL.has(m.status));
+  const finalM = finished('FINAL')[0];
+  const semis = finished('SEMI_FINALS');
+  if (!finalM || semis.length < 2) return null;
+
+  const push = (arr, n) => { if (n && !arr.includes(n)) arr.push(n); };
+  const semifinalists = [];
+  semis.forEach(m => { push(semifinalists, teamNameOf(m.homeTeam)); push(semifinalists, teamNameOf(m.awayTeam)); });
+  const finalists = [teamNameOf(finalM.homeTeam), teamNameOf(finalM.awayTeam)].filter(Boolean);
+  const champion = winnerOf(finalM);
+  const ft = (finalM.score && finalM.score.fullTime) || {};
+
+  return {
+    complete: true,
+    champion,
+    finalScore: ft.home != null ? `${ft.home}–${ft.away}` : null,
+    finalists,
+    semifinalists,
+    topScorer: scorers[0] ? { name: scorers[0].name, team: scorers[0].team, goals: scorers[0].goals } : null,
+  };
+}
+
 async function api(pathname) {
   const res = await fetch(BASE + pathname, { headers: { 'X-Auth-Token': TOKEN } });
   if (!res.ok) throw new Error(`API ${pathname} -> ${res.status}: ${await res.text()}`);
@@ -129,12 +168,19 @@ async function main() {
     standings = (existing.standings || []);
   }
 
+  // --- Knockout outcomes (semifinalists / finalists / champion) ---
+  // Preserved from a previous run if the final hasn't been played yet.
+  const outcomes = deriveOutcomes(apiMatches, scorers) || existing.outcomes || null;
+  if (outcomes && outcomes.complete)
+    console.log(`Tournament complete: champion ${outcomes.champion}, final ${outcomes.finalists.join(' vs ')} ${outcomes.finalScore || ''}.`);
+
   const out = {
     updatedAt: new Date().toISOString(),
     source: 'football-data.org/WC',
     results,
     scorers,
     standings,
+    outcomes,
   };
   fs.writeFileSync(RESULTS_PATH, JSON.stringify(out, null, 2));
 

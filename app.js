@@ -37,6 +37,52 @@ function pointsAt(cap) {
   return pts;
 }
 
+/* ----- final bonus scoring (only once the tournament is complete) ----- */
+function outcomes() { return (state.res && state.res.outcomes) || null; }
+function isComplete() { const o = outcomes(); return !!(o && o.complete); }
+
+// Actual bonus points per player, computed against the real tournament outcomes.
+// Team picks are matched via the same word-boundary tokenizer the simulation uses,
+// so dash/comma/"ja"-separated picks ("Espanja - Argentiina") all resolve correctly.
+// Cached on state so every view agrees and we don't re-tokenize on each render.
+function actualBonus() {
+  const o = outcomes();
+  if (!o || !o.complete) return null;
+  if (state._bonusCache) return state._bonusCache;
+  const idx = state.teamIndex;
+  if (!idx) return null;
+
+  const tok = n => idx.tokenOf(n);
+  const sfSet = new Set((o.semifinalists || []).map(tok).filter(Boolean));
+  const finSet = new Set((o.finalists || []).map(tok).filter(Boolean));
+  const champTok = o.champion ? tok(o.champion) : null;
+  const tsSur = o.topScorer ? deburr(o.topScorer.name).split(/\s+/).pop() : null;
+
+  const bRow = k => (state.pred.bonus.find(b => b.key === k) || { picks: {} }).picks;
+  const sfR = bRow('semifinal'), fiR = bRow('final'), chR = bRow('champion'), tsR = bRow('topscorer');
+  const nameOf = t => (idx.byToken[t] || {}).name || t;
+
+  const by = {};
+  state.pred.players.forEach(p => {
+    const sfHit = idx.extractTokens(sfR[p] || '').filter(t => sfSet.has(t));
+    const finHit = idx.extractTokens(fiR[p] || '').filter(t => finSet.has(t));
+    const chTok = idx.extractTokens(chR[p] || '')[0] || null;
+    const champHit = !!(chTok && chTok === champTok);
+    const raw = (tsR[p] || '').trim();
+    const canon = raw && window.Sim ? window.Sim.canonScorer(raw, state.res.scorers || []) : raw;
+    const tsHit = !!(raw && tsSur && deburr(canon).split(/\s+/).pop() === tsSur);
+    const sf = sfHit.length * 5, fin = finHit.length * 10, ch = champHit ? 10 : 0, ts = tsHit ? 10 : 0;
+    by[p] = {
+      sf, fin, ch, ts, total: sf + fin + ch + ts,
+      sfHit: sfHit.map(nameOf), finHit: finHit.map(nameOf),
+      champPick: chTok ? nameOf(chTok) : null, champHit,
+      tsPick: raw ? canon : null, tsHit,
+    };
+  });
+  state._bonusCache = { by, o };
+  return state._bonusCache;
+}
+
 function rankMap(pts) {
   const players = state.pred.players.slice()
     .sort((a, b) => pts[b] - pts[a] || a.localeCompare(b, 'fi'));
@@ -66,7 +112,9 @@ function standings() {
   const resolved = res.length;
   const remaining = total - resolved;
 
-  const pts = pointsAt(Infinity);
+  const groupPts = pointsAt(Infinity);
+  const ab = actualBonus();                 // null until the tournament is complete
+  const pts = {}; players.forEach(p => pts[p] = groupPts[p] + (ab ? ab.by[p].total : 0));
   const played = {}; players.forEach(p => played[p] = resolved); // everyone guessed every match
 
   // form: last 5 resolved
@@ -99,8 +147,10 @@ function standings() {
     return {
       name: p,
       pts: pts[p],
+      groupPts: groupPts[p],
+      bonus: ab ? ab.by[p].total : null,
       played: played[p],
-      hit: played[p] ? pts[p] / played[p] : 0,
+      hit: played[p] ? groupPts[p] / played[p] : 0,
       form: form[p],
       rank: nowRank[p],
       delta: prevRank ? prevRank[p] - nowRank[p] : null,
@@ -110,7 +160,7 @@ function standings() {
     };
   }).sort((a, b) => a.rank - b.rank || b.pts - a.pts || a.name.localeCompare(b.name, 'fi'));
 
-  return { rows, resolved, remaining, total, leaderPts, leader: rows[0] };
+  return { rows, resolved, remaining, total, leaderPts, leader: rows[0], complete: !!ab };
 }
 
 // Monte Carlo: remaining matches resolved by crowd-consensus probabilities.
@@ -378,10 +428,12 @@ function renderWinChart(colors) {
 }
 
 function renderStandingsTable(st, colors) {
-  const showP = state.showProb;
+  const done = st.complete;
+  const showP = state.showProb && !done;   // projections give way to the real result once complete
   const head = `<thead><tr>
     <th class="l">#</th><th></th><th class="l">Pelaaja</th>
-    <th>Pist</th><th class="l barcell hide-sm">Eteneminen</th>
+    ${done ? '<th class="hide-sm">Lohko</th><th>Bonus</th>' : ''}
+    <th>${done ? 'Yht.' : 'Pist'}</th><th class="l barcell hide-sm">Eteneminen</th>
     <th class="hide-sm">Osuma</th><th class="hide-sm">Viim. 5</th>
     ${showP ? '<th>Voitto-%</th><th>Ennuste</th>' : ''}</tr></thead>`;
   const max = st.leaderPts || 1;
@@ -398,10 +450,13 @@ function renderStandingsTable(st, colors) {
       : (r.rank === 1 ? '<span class="badge live">KÄRJESSÄ</span>' : '<span class="muted">…</span>');
     const probCells = showP
       ? `<td class="winp ${r.win >= 0.15 ? 'hot' : ''}">${winPct}</td><td>${status}</td>` : '';
-    return `<tr class="tr-${r.rank}">
-      <td class="l st-rank">${r.rank}</td>
+    const finalCells = done
+      ? `<td class="hide-sm num muted">${r.groupPts}</td><td class="num ${r.bonus > 0 ? 'pl-pos' : 'muted'}">${r.bonus > 0 ? '+' + r.bonus : '0'}</td>` : '';
+    return `<tr class="tr-${r.rank}${done && r.rank === 1 ? ' champ-row' : ''}">
+      <td class="l st-rank">${r.rank === 1 && done ? '🏆' : r.rank}</td>
       <td>${dCell}</td>
       <td class="l"><span class="st-name" style="border-left:3px solid ${colors[r.name]};padding-left:7px">${esc(r.name)}</span></td>
+      ${finalCells}
       <td class="st-pts">${r.pts}</td>
       <td class="l barcell hide-sm"><div class="minibar"><span style="width:${(r.pts / max) * 100}%"></span></div></td>
       <td class="hide-sm num">${Math.round(r.hit * 100)}%</td>
@@ -492,6 +547,31 @@ function bindCharts(colors) {
     }));
 }
 
+// Hero banner shown once the tournament is over: family-league winner + the
+// real champion / final / golden boot.
+function renderChampionBanner(st) {
+  const o = outcomes();
+  if (!o || !o.complete) return '';
+  const winner = st.rows[0];
+  const runnerUp = st.rows[1];
+  const gap = runnerUp ? winner.pts - runnerUp.pts : null;
+  const gb = o.topScorer;
+  const chips = [
+    `<div class="wc-chip"><span class="wc-lab">🏆 Maailmanmestari</span><span class="wc-val">${esc(fiName(o.champion))}</span></div>`,
+    `<div class="wc-chip"><span class="wc-lab">Finaali</span><span class="wc-val">${esc(fiName(o.finalists[0]))} ${esc(o.finalScore || '')} ${esc(fiName(o.finalists[1]))}</span></div>`,
+    gb ? `<div class="wc-chip"><span class="wc-lab">👑 Maalikuningas</span><span class="wc-val">${esc(gb.name)} <small>${gb.goals}</small></span></div>` : '',
+  ].join('');
+  return `<div class="champ-banner mb">
+    <div class="cb-crown">🏆</div>
+    <div class="cb-main">
+      <span class="cb-kicker">PERHELIIGAN VOITTAJA</span>
+      <div class="cb-name">${esc(winner.name)}</div>
+      <div class="cb-sub">${winner.pts} pistettä${gap != null ? ` · ${gap > 0 ? gap + ' p kärkeen' : 'tasapäässä'}` : ''} · ${winner.groupPts} lohko + ${winner.bonus} bonus</div>
+    </div>
+    <div class="cb-facts">${chips}</div>
+  </div>`;
+}
+
 function renderDash() {
   const colors = playerColors();
   const st = standings();
@@ -499,9 +579,10 @@ function renderDash() {
   renderRibbon(st, ts);
 
   document.getElementById('view-dash').innerHTML = `
+    ${renderChampionBanner(st)}
     <div id="charts">${chartsHTML(colors)}</div>
     <div class="panel mb">
-      <div class="panel-h"><h2>Sarjataulukko</h2><span class="sub">${st.resolved}/${st.total} ottelua${state.showProb ? ' · voitto-% = koko turnauksen simulaatio' : ''}</span></div>
+      <div class="panel-h"><h2>${st.complete ? 'Lopullinen sarjataulukko' : 'Sarjataulukko'}</h2><span class="sub">${st.complete ? `alkulohko + bonukset · nuolet = bonusten aiheuttama muutos` : `${st.resolved}/${st.total} ottelua${state.showProb ? ' · voitto-% = koko turnauksen simulaatio' : ''}`}</span></div>
       ${renderStandingsTable(st, colors)}
     </div>
     <div class="grid grid-2">
@@ -633,8 +714,11 @@ const revealBox = (title, body) => `<div class="panel"><div class="reveal-box">
 function renderForecast() {
   const colors = playerColors();
   if (!state.showProb) {
+    const msg = isComplete()
+      ? 'Turnaus on ohi — lopputulokset näkyvät ETUSIVU- ja BONUKSET-välilehdillä. Tämä on simulaation jälkiviisas ennuste: mitä malli olisi veikannut. Paina näyttääksesi.'
+      : 'Voittotodennäköisyydet, mestari- ja maalikuningasennusteet pidetään piilossa, jottei jännitys katoa. Paina näyttääksesi — valinta muistetaan tällä laitteella.';
     document.getElementById('view-forecast').innerHTML =
-      revealBox('Ennusteet piilotettu', 'Voittotodennäköisyydet, mestari- ja maalikuningasennusteet pidetään piilossa, jottei jännitys katoa. Paina näyttääksesi — valinta muistetaan tällä laitteella.');
+      revealBox(isComplete() ? 'Jälkiviisas ennuste piilossa' : 'Ennusteet piilotettu', msg);
     return;
   }
   const proj = state.proj;
@@ -731,7 +815,78 @@ function bonusPicks(p, key) {
   return toks.map(t => ({ name: fiName(idx.byToken[t].name), p: null }));
 }
 
+// Once the tournament is over: show what actually happened and who nailed it.
+function renderBonusResults() {
+  const ab = actualBonus();
+  const o = ab.o;
+  const players = state.pred.players;
+
+  // per-player bonus leaderboard
+  const rows = players.map(p => ({ name: p, ...ab.by[p] }))
+    .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'fi'));
+  const maxB = Math.max(1, ...rows.map(r => r.total));
+  const lbRows = rows.map((r, i) => `<tr class="${i === 0 ? 'leadrow' : ''}">
+     <td class="l st-rank">${i + 1}</td>
+     <td class="l"><span class="st-name">${esc(r.name)}</span></td>
+     <td class="num muted hide-sm">${r.sf || '·'}</td>
+     <td class="num muted hide-sm">${r.fin || '·'}</td>
+     <td class="num muted hide-sm">${r.ch || '·'}</td>
+     <td class="num muted hide-sm">${r.ts || '·'}</td>
+     <td class="st-pts pl-pos">${r.total}</td>
+     <td class="l barcell hide-sm"><div class="minibar"><span style="width:${r.total / maxB * 100}%"></span></div></td>
+   </tr>`).join('');
+  const lb = `<div class="panel mb"><div class="panel-h"><h2>Bonuspisteet</h2><span class="sub">välierä 5 · finaali 10 · mestari +10 · kunkku 10</span></div>
+    <div class="tbl-scroll"><table class="stand"><thead><tr><th class="l">#</th><th class="l">Pelaaja</th>
+      <th class="hide-sm">VE</th><th class="hide-sm">Fin</th><th class="hide-sm">Mest</th><th class="hide-sm">Kunkku</th><th>Yht.</th><th class="l barcell hide-sm"></th></tr></thead>
+      <tbody>${lbRows}</tbody></table></div></div>`;
+
+  // actual outcomes header
+  const actual = `<div class="panel mb"><div class="panel-h"><h2>Lopputulokset</h2><span class="sub">näin kävi</span></div>
+    <div class="wc-facts">
+      <div class="wc-chip"><span class="wc-lab">🏆 Maailmanmestari</span><span class="wc-val">${esc(fiName(o.champion))}</span></div>
+      <div class="wc-chip"><span class="wc-lab">Finalistit</span><span class="wc-val">${o.finalists.map(t => esc(fiName(t))).join(' · ')}</span></div>
+      <div class="wc-chip"><span class="wc-lab">Välieräjoukkueet</span><span class="wc-val">${o.semifinalists.map(t => esc(fiName(t))).join(' · ')}</span></div>
+      ${o.topScorer ? `<div class="wc-chip"><span class="wc-lab">👑 Maalikuningas</span><span class="wc-val">${esc(o.topScorer.name)} <small>${o.topScorer.goals}</small></span></div>` : ''}
+    </div></div>`;
+
+  // per-category: each player's picks with hit/miss marks
+  const hitChip = (name, hit) => `<span class="pchip ${hit ? 'hit' : 'miss'}">${hit ? '✓' : '✗'} ${esc(name)}</span>`;
+  const idx = state.teamIndex;
+  const bRow = k => (state.pred.bonus.find(b => b.key === k) || { picks: {} }).picks;
+  const teamHits = (raw, targetSet) => {
+    const toks = idx.extractTokens(raw || '');
+    return toks.map(t => ({ name: fiName((idx.byToken[t] || {}).name || t), hit: targetSet.has(t) }));
+  };
+  const sfSet = new Set((o.semifinalists || []).map(n => idx.tokenOf(n)).filter(Boolean));
+  const finSet = new Set((o.finalists || []).map(n => idx.tokenOf(n)).filter(Boolean));
+  const champTok = idx.tokenOf(o.champion);
+
+  const catBlock = (label, sub, rowFn) => {
+    const body = players.map(p => `<tr><td class="who">${esc(p)}</td><td><div class="pchips">${rowFn(p)}</div></td></tr>`).join('');
+    return `<div class="panel bonus-block"><div class="panel-h"><h2>${label}</h2><span class="sub">${sub}</span></div><table><tbody>${body}</tbody></table></div>`;
+  };
+  const sfBlock = catBlock('Välieräjoukkueet', '5 p / oikea', p =>
+    teamHits(bRow('semifinal')[p], sfSet).map(x => hitChip(x.name, x.hit)).join('') || '<span class="muted">—</span>');
+  const finBlock = catBlock('Finaalijoukkueet', '10 p / oikea', p =>
+    teamHits(bRow('final')[p], finSet).map(x => hitChip(x.name, x.hit)).join('') || '<span class="muted">—</span>');
+  const chBlock = catBlock('Maailmanmestari', '+10 p', p => {
+    const t = idx.extractTokens(bRow('champion')[p] || '')[0];
+    if (!t) return '<span class="muted">—</span>';
+    return hitChip(fiName((idx.byToken[t] || {}).name || t), t === champTok);
+  });
+  const tsBlock = catBlock('Maalikuningas', '10 p', p => {
+    const raw = (bRow('topscorer')[p] || '').trim();
+    if (!raw) return '<span class="muted">—</span>';
+    return hitChip(ab.by[p].tsPick || raw, ab.by[p].tsHit);
+  });
+
+  document.getElementById('view-bonus').innerHTML =
+    `<p class="muted" style="margin-top:0">Turnaus on ratkennut — bonuspisteet on laskettu todellisten lopputulosten mukaan. ✓ = osui, ✗ = ohi.</p>
+     ${actual}${lb}<div class="grid grid-2">${sfBlock}${finBlock}</div><div class="grid grid-2">${chBlock}${tsBlock}</div>`;
+}
+
 function renderBonus() {
+  if (isComplete()) return renderBonusResults();
   const { players } = state.pred;
   const chip = (name, p) => `<span class="pchip ${p >= 0.4 ? 'hi' : p >= 0.15 ? 'mid' : ''}">${esc(name)}${p != null ? ` <b>${pct(p)}</b>` : ''}</span>`;
 
